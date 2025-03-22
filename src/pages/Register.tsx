@@ -27,6 +27,12 @@ const Register = () => {
       return;
     }
     
+    if (password.length < 6) {
+      // Supabase requires minimum 6 characters for password
+      alert("Password must be at least 6 characters long");
+      return;
+    }
+    
     await register(name, email, password);
   };
   
@@ -108,7 +114,7 @@ const Register = () => {
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Must be at least 8 characters long
+                Must be at least 6 characters long
               </p>
             </div>
             

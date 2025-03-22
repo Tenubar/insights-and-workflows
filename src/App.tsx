@@ -17,6 +17,7 @@ import Create from "./pages/Create";
 import ContentHub from "./pages/ContentHub";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/" element={<Login />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/training" element={<Training />} />
               <Route path="/create" element={<Create />} />
