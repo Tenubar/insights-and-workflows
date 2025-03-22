@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { 
   LayoutDashboard, 
-  Training, 
+  GraduationCap, 
   FilePlus, 
   Database, 
   Settings, 
@@ -17,7 +17,7 @@ import {
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Training, label: "Training", path: "/training" },
+  { icon: GraduationCap, label: "Training", path: "/training" },
   { icon: FilePlus, label: "Create", path: "/create" },
   { icon: Database, label: "Content Hub", path: "/content-hub" },
   { icon: Settings, label: "Settings", path: "/settings" },
