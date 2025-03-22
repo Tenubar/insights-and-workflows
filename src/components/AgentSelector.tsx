@@ -1,0 +1,125 @@
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Check, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type Agent = {
+  id: string;
+  name: string;
+  description: string;
+  avatar: string;
+};
+
+const agents: Agent[] = [
+  {
+    id: "1",
+    name: "Customer Support Agent",
+    description: "Handles customer inquiries and provides assistance",
+    avatar: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=300&h=300&auto=format&fit=crop&q=80&crop=faces",
+  },
+  {
+    id: "2",
+    name: "Sales Assistant",
+    description: "Helps with product recommendations and sales",
+    avatar: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=300&auto=format&fit=crop&q=80&crop=faces",
+  },
+  {
+    id: "3",
+    name: "Data Analyst",
+    description: "Processes and analyzes data for insights",
+    avatar: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=300&h=300&auto=format&fit=crop&q=80&crop=faces",
+  },
+];
+
+const AgentSelector = () => {
+  const [selectedAgent, setSelectedAgent] = useState<Agent>(agents[0]);
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="glass rounded-xl p-6 overflow-hidden border border-gray-100 shadow-sm">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-medium">Select an Agent</h2>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-sm text-primary hover:text-primary/80 transition-colors"
+        >
+          View all
+        </button>
+      </div>
+
+      <div className="relative">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white"
+        >
+          <div className="flex items-center">
+            <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
+              <motion.img 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                src={selectedAgent.avatar} 
+                alt={selectedAgent.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <p className="font-medium">{selectedAgent.name}</p>
+              <p className="text-sm text-gray-500">{selectedAgent.description}</p>
+            </div>
+          </div>
+          <ChevronDown
+            size={16}
+            className={cn(
+              "transition-transform duration-200",
+              isOpen ? "transform rotate-180" : ""
+            )}
+          />
+        </button>
+
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute z-10 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg"
+          >
+            <div className="p-2">
+              {agents.map((agent) => (
+                <button
+                  key={agent.id}
+                  onClick={() => {
+                    setSelectedAgent(agent);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center p-3 rounded-md mb-1 last:mb-0 hover:bg-gray-50",
+                    selectedAgent.id === agent.id ? "bg-blue-50" : ""
+                  )}
+                >
+                  <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+                    <img
+                      src={agent.avatar}
+                      alt={agent.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium">{agent.name}</p>
+                    <p className="text-sm text-gray-500">{agent.description}</p>
+                  </div>
+                  {selectedAgent.id === agent.id && (
+                    <Check size={16} className="text-primary ml-2" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AgentSelector;
