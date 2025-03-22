@@ -9,6 +9,9 @@ import { motion } from "framer-motion";
 const Dashboard = () => {
   const { user } = useAuth();
   
+  // Safely extract the user's name from metadata or use a fallback
+  const userName = user?.user_metadata?.name || "User";
+  
   const insightData = [
     {
       title: "Time Saved",
@@ -44,7 +47,7 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl font-bold mb-2"
         >
-          Welcome back, {user?.name.split(" ")[0]}
+          Welcome back, {userName.split(" ")[0]}
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0 }}
