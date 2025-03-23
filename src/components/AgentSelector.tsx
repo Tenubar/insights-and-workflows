@@ -40,9 +40,8 @@ const AgentSelector = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleAgentClick = (agent: Agent) => {
-    setSelectedAgent(agent);
-    setIsOpen(true); // Show all agents when clicking on an agent
+  const handleAgentClick = () => {
+    setIsOpen(!isOpen); // Toggle the dropdown when clicking the main agent
   };
 
   const handleChatButtonClick = (agent: Agent, e: React.MouseEvent) => {
@@ -64,11 +63,11 @@ const AgentSelector = () => {
 
       <div className="relative">
         <button
-          onClick={() => handleAgentClick(selectedAgent)}
+          onClick={handleAgentClick}
           className="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white"
         >
           <div className="flex items-center flex-1">
-            <Avatar className="w-12 h-12 mr-4">
+            <Avatar className="w-12 h-12 mr-4 shrink-0">
               <AvatarImage src={selectedAgent.avatar} alt={selectedAgent.name} />
               <AvatarFallback>{selectedAgent.name.charAt(0)}</AvatarFallback>
             </Avatar>
@@ -117,7 +116,7 @@ const AgentSelector = () => {
                       selectedAgent.id === agent.id ? "bg-blue-50" : ""
                     )}
                   >
-                    <Avatar className="w-10 h-10 mr-3">
+                    <Avatar className="w-10 h-10 mr-3 shrink-0">
                       <AvatarImage src={agent.avatar} alt={agent.name} />
                       <AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
                     </Avatar>
