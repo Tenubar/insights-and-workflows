@@ -154,12 +154,12 @@ const Chat = () => {
                 {agent.description}
               </p>
               
-              <div className="grid grid-cols-2 gap-3 mt-8">
+              <div className="grid grid-cols-1 gap-3 mt-8 w-full max-w-md mx-auto">
                 {suggestedPrompts.map((prompt) => (
                   <Button
                     key={prompt.id}
                     variant="outline"
-                    className="text-left h-auto p-3 bg-[#2A2F3C] hover:bg-[#3A3F4C] text-sm border-gray-700 hover:border-gray-600"
+                    className="w-full text-left h-auto p-3 bg-[#2A2F3C] hover:bg-[#3A3F4C] text-sm border-gray-700 hover:border-gray-600 whitespace-normal"
                     onClick={() => handlePromptClick(prompt.text)}
                   >
                     {prompt.text}
