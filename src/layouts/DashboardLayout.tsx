@@ -6,10 +6,12 @@ import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import { Toaster } from "@/components/ui/sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -29,8 +31,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <main className="flex-1 p-6">
+      <div className="flex flex-col flex-1 overflow-hidden relative">
+        <main className="flex-1 p-6 overflow-y-auto">
           <PageTransition>{children}</PageTransition>
         </main>
         <Footer />

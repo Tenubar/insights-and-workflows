@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   LayoutDashboard, 
   GraduationCap, 
@@ -24,15 +25,31 @@ const menuItems = [
 ];
 
 const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useIsMobile();
+  const [collapsed, setCollapsed] = useState(() => {
+    // Default to collapsed on mobile, expanded on desktop
+    return isMobile;
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
 
+  // Auto-collapse the sidebar on mobile when navigating
+  useEffect(() => {
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  }, [location.pathname, isMobile]);
+
+  // Update collapsed state when screen size changes
+  useEffect(() => {
+    setCollapsed(isMobile);
+  }, [isMobile]);
+
   return (
     <aside 
       className={cn(
-        "h-screen sticky top-0 border-r border-gray-100 bg-white/80 backdrop-blur-md transition-all duration-300 ease-in-out flex flex-col",
+        "h-screen sticky top-0 border-r border-gray-100 bg-white/80 backdrop-blur-md transition-all duration-300 ease-in-out flex flex-col z-10",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -51,6 +68,7 @@ const Sidebar = () => {
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
@@ -76,7 +94,7 @@ const Sidebar = () => {
                     initial={{ opacity: 0, width: 0 }}
                     animate={{ opacity: 1, width: "auto" }}
                     exit={{ opacity: 0, width: 0 }}
-                    className="ml-3"
+                    className="ml-3 whitespace-nowrap overflow-hidden"
                   >
                     {item.label}
                   </motion.span>
