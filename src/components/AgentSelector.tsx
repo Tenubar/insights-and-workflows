@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 type Agent = {
   id: string;
@@ -14,8 +15,8 @@ type Agent = {
 const agents: Agent[] = [
   {
     id: "1",
-    name: "Customer Support Agent",
-    description: "Handles customer inquiries and provides assistance",
+    name: "Donna AI: Your Empowering Life Coach",
+    description: "Donna AI is your confident, insightful life coach, inspired by Donna Paulsen from Suits. She blends wit, charm, and wisdom to guide you through challenges, uncover your 'why,' and help you thrive. With Donna, you're not just supported—you're empowered.",
     avatar: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=300&h=300&auto=format&fit=crop&q=80&crop=faces",
   },
   {
@@ -35,6 +36,14 @@ const agents: Agent[] = [
 const AgentSelector = () => {
   const [selectedAgent, setSelectedAgent] = useState<Agent>(agents[0]);
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleAgentClick = (agent: Agent) => {
+    setSelectedAgent(agent);
+    setIsOpen(false);
+    // Navigate to chat page with agent data
+    navigate("/chat", { state: { agent } });
+  };
 
   return (
     <div className="glass rounded-xl p-6 overflow-hidden border border-gray-100 shadow-sm">
@@ -50,7 +59,7 @@ const AgentSelector = () => {
 
       <div className="relative">
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => handleAgentClick(selectedAgent)}
           className="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white"
         >
           <div className="flex items-center">
@@ -89,10 +98,7 @@ const AgentSelector = () => {
               {agents.map((agent) => (
                 <button
                   key={agent.id}
-                  onClick={() => {
-                    setSelectedAgent(agent);
-                    setIsOpen(false);
-                  }}
+                  onClick={() => handleAgentClick(agent)}
                   className={cn(
                     "w-full flex items-center p-3 rounded-md mb-1 last:mb-0 hover:bg-gray-50",
                     selectedAgent.id === agent.id ? "bg-blue-50" : ""

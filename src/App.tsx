@@ -18,6 +18,7 @@ import ContentHub from "./pages/ContentHub";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import Chat from "./pages/Chat";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/create" element={<Create />} />
               <Route path="/content-hub" element={<ContentHub />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/chat" element={<Chat />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
