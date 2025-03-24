@@ -64,15 +64,15 @@ const Training = () => {
     <DashboardLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Training</h1>
-        <p className="text-gray-500">Manage your agent training data and sessions</p>
+        <p className="text-gray-500 dark:text-gray-400">Manage your agent training data and sessions</p>
       </div>
       
-      <div className="glass rounded-xl p-8 overflow-hidden border border-gray-100 shadow-sm">
+      <div className="glass dark:glass-dark rounded-xl p-8 overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Context Info Section */}
             <div>
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
                 <Dumbbell className="h-5 w-5" />
                 Context Info
               </h2>
@@ -137,7 +137,7 @@ const Training = () => {
             
             {/* Business Info Section */}
             <div>
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
                 <Dumbbell className="h-5 w-5" />
                 Business Info
               </h2>
