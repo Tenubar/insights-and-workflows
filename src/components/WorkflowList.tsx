@@ -62,7 +62,7 @@ const WorkflowList = () => {
   };
 
   return (
-    <div className="glass rounded-xl p-6 overflow-hidden border border-gray-100 shadow-sm">
+    <div className="glass dark:glass-dark rounded-xl p-6 overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-medium">Available Workflows</h2>
         <button className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center">
@@ -82,26 +82,26 @@ const WorkflowList = () => {
             key={workflow.id}
             variants={item}
             whileHover={{ x: 4 }}
-            className="bg-white rounded-lg border border-gray-100 p-4 flex justify-between items-center cursor-pointer transition-all hover:shadow-sm"
+            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center cursor-pointer transition-all hover:shadow-sm"
           >
             <div>
               <div className="flex items-center">
-                <h3 className="font-medium">{workflow.name}</h3>
+                <h3 className="font-medium dark:text-white">{workflow.name}</h3>
                 {workflow.status === "active" && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1"></span>
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 dark:bg-green-400 mr-1"></span>
                     Active
                   </span>
                 )}
                 {workflow.status === "draft" && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
                     Draft
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-500 mt-1">{workflow.description}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{workflow.description}</p>
               
-              <div className="mt-2 flex items-center text-xs text-gray-500">
+              <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center mr-4">
                   <GitBranchPlus size={12} className="mr-1" />
                   <span>{workflow.steps} steps</span>
@@ -117,7 +117,7 @@ const WorkflowList = () => {
             </div>
             
             <div>
-              <button className="text-primary hover:text-primary/80 p-1 rounded-full hover:bg-gray-50 transition-colors">
+              <button className="text-primary hover:text-primary/80 p-1 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <ArrowRight size={16} />
               </button>
             </div>

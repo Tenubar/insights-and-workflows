@@ -50,7 +50,7 @@ const AgentSelector = () => {
   };
 
   return (
-    <div className="glass rounded-xl p-4 md:p-6 overflow-hidden border border-gray-100 shadow-sm">
+    <div className="glass dark:glass-dark rounded-xl p-4 md:p-6 overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium">Select an Agent</h2>
         <button
@@ -64,7 +64,7 @@ const AgentSelector = () => {
       <div className="relative">
         <button
           onClick={handleAgentClick}
-          className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border border-gray-200 bg-white"
+          className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-gray-100"
         >
           <div className="flex items-center flex-1 mb-3 sm:mb-0">
             <Avatar className="w-12 h-12 mr-4 shrink-0">
@@ -73,7 +73,7 @@ const AgentSelector = () => {
             </Avatar>
             <div className="flex-1">
               <p className="font-medium">{selectedAgent.name}</p>
-              <p className="text-sm text-gray-500 line-clamp-2">{selectedAgent.description}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{selectedAgent.description}</p>
             </div>
           </div>
           <div className="flex items-center ml-0 sm:ml-4 w-full sm:w-auto">
@@ -102,7 +102,7 @@ const AgentSelector = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.2 }}
-              className="relative mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-10"
+              className="relative mt-2 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg z-10"
             >
               <div className="p-2 grid grid-cols-1 gap-2">
                 {agents.map((agent) => (
@@ -112,17 +112,19 @@ const AgentSelector = () => {
                       setSelectedAgent(agent);
                     }}
                     className={cn(
-                      "w-full flex flex-col sm:flex-row items-start sm:items-center p-3 rounded-md hover:bg-gray-50 relative",
-                      selectedAgent.id === agent.id ? "bg-blue-50" : ""
+                      "w-full flex flex-col sm:flex-row items-start sm:items-center p-3 rounded-md relative",
+                      selectedAgent.id === agent.id 
+                        ? "bg-blue-50 dark:bg-blue-900/30" 
+                        : "hover:bg-gray-50 dark:hover:bg-gray-700"
                     )}
                   >
                     <Avatar className="w-10 h-10 mb-2 sm:mb-0 sm:mr-3 shrink-0">
                       <AvatarImage src={agent.avatar} alt={agent.name} />
                       <AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 text-left mb-2 sm:mb-0">
+                    <div className="flex-1 text-left mb-2 sm:mb-0 dark:text-gray-100">
                       <p className="font-medium">{agent.name}</p>
-                      <p className="text-sm text-gray-500 line-clamp-2">{agent.description}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{agent.description}</p>
                     </div>
                     <div className="flex items-center w-full sm:w-auto justify-between sm:justify-end">
                       <Button
