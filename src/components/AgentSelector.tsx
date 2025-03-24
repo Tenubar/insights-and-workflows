@@ -50,7 +50,7 @@ const AgentSelector = () => {
   };
 
   return (
-    <div className="glass rounded-xl p-6 overflow-hidden border border-gray-100 shadow-sm">
+    <div className="glass rounded-xl p-4 md:p-6 overflow-hidden border border-gray-100 shadow-sm">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium">Select an Agent</h2>
         <button
@@ -64,22 +64,22 @@ const AgentSelector = () => {
       <div className="relative">
         <button
           onClick={handleAgentClick}
-          className="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white"
+          className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border border-gray-200 bg-white"
         >
-          <div className="flex items-center flex-1">
+          <div className="flex items-center flex-1 mb-3 sm:mb-0">
             <Avatar className="w-12 h-12 mr-4 shrink-0">
               <AvatarImage src={selectedAgent.avatar} alt={selectedAgent.name} />
               <AvatarFallback>{selectedAgent.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <p className="font-medium">{selectedAgent.name}</p>
-              <p className="text-sm text-gray-500 line-clamp-1">{selectedAgent.description}</p>
+              <p className="text-sm text-gray-500 line-clamp-2">{selectedAgent.description}</p>
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center ml-0 sm:ml-4 w-full sm:w-auto">
             <Button
               onClick={(e) => handleChatButtonClick(selectedAgent, e)}
-              className="mr-3 flex items-center"
+              className="mr-3 flex items-center w-full sm:w-auto"
               size="sm"
             >
               <MessageSquare className="mr-1" size={16} />
@@ -102,7 +102,7 @@ const AgentSelector = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.2 }}
-              className="relative mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg"
+              className="relative mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-10"
             >
               <div className="p-2 grid grid-cols-1 gap-2">
                 {agents.map((agent) => (
@@ -112,19 +112,19 @@ const AgentSelector = () => {
                       setSelectedAgent(agent);
                     }}
                     className={cn(
-                      "w-full flex items-center p-3 rounded-md hover:bg-gray-50 relative",
+                      "w-full flex flex-col sm:flex-row items-start sm:items-center p-3 rounded-md hover:bg-gray-50 relative",
                       selectedAgent.id === agent.id ? "bg-blue-50" : ""
                     )}
                   >
-                    <Avatar className="w-10 h-10 mr-3 shrink-0">
+                    <Avatar className="w-10 h-10 mb-2 sm:mb-0 sm:mr-3 shrink-0">
                       <AvatarImage src={agent.avatar} alt={agent.name} />
                       <AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 text-left">
+                    <div className="flex-1 text-left mb-2 sm:mb-0">
                       <p className="font-medium">{agent.name}</p>
                       <p className="text-sm text-gray-500 line-clamp-2">{agent.description}</p>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center w-full sm:w-auto justify-between sm:justify-end">
                       <Button
                         onClick={(e) => handleChatButtonClick(agent, e)}
                         className="mr-3 flex items-center"

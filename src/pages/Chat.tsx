@@ -235,8 +235,8 @@ const Chat = () => {
         </Tabs>
       </header>
       
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-32">
+      {/* Main content - fix overflow */}
+      <div className="flex-1 overflow-y-auto p-4">
         <AnimatePresence mode="wait">
           {activeTab === "chat" && (
             <motion.div
@@ -273,7 +273,7 @@ const Chat = () => {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 pb-20">
                   {messages.map((message) => (
                     <motion.div
                       key={message.id}
@@ -321,9 +321,9 @@ const Chat = () => {
         </AnimatePresence>
       </div>
       
-      {/* Input area - only show in chat tab */}
+      {/* Input area - centered the input text and icons */}
       {activeTab === "chat" && (
-        <div className="absolute bottom-0 left-0 right-0 bg-[#222222] border-t border-gray-800 p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#222222] border-t border-gray-800 p-4">
           <div className="flex items-end gap-2 max-w-4xl mx-auto">
             <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
               <Plus />

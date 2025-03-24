@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import { Toaster } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -28,10 +29,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-[#1A1F2C] dark:text-white">
       <Sidebar />
       
       <div className="flex flex-col flex-1 overflow-hidden relative">
+        <div className="absolute top-4 right-6 z-10">
+          <ThemeToggle />
+        </div>
         <main className="flex-1 p-6 overflow-y-auto">
           <PageTransition>{children}</PageTransition>
         </main>
