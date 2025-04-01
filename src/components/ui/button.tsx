@@ -51,12 +51,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         // Safely check the type, handling potential null
         const childType = child.type;
         
-        // Check if it's a string element (like 'button') or a component with a displayName
-        return (typeof childType === 'string' && childType === 'button') || 
-               (typeof childType === 'object' && 
-                childType !== null && 
-                'displayName' in childType && 
-                childType.displayName === 'Button');
+        // Check if it's a string element (like 'button')
+        if (typeof childType === 'string' && childType === 'button') {
+          return true;
+        }
+        
+        // Check if it's a component with a displayName
+        if (typeof childType === 'object' && childType !== null) {
+          return 'displayName' in childType && childType.displayName === 'Button';
+        }
+        
+        return false;
       }
     );
 
@@ -77,4 +82,3 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
-
