@@ -1,136 +1,116 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import axios from "axios";
 
-// Define auth context type
+type User = {
+  uGuid: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  loggedBefore: boolean;
+};
+
 type AuthContextType = {
   user: User | null;
-  session: Session | null;
+  setUser: (updatedUser: User) => void;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateLoggedBefore: (loggedBefore: boolean) => void;
   isAuthenticated: boolean;
 };
+
 
 // Create auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Check for saved session and set up auth state listener
-  useEffect(() => {
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        if (currentSession) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-        } else {
-          setSession(null);
-          setUser(null);
-        }
-      }
-    );
-
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Login function
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Login successful");
-        navigate("/dashboard");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error("An unexpected error occurred");
-    } finally {
-      setLoading(false);
+  const updateLoggedBefore = (loggedBefore: boolean) => {
+    if (user) {
+      const updatedUser = { ...user, loggedBefore }; // Update the property
+      setUser(updatedUser); // Set the new user state
     }
   };
 
-  // Register function
-  const register = async (name: string, email: string, password: string) => {
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name, // Store name in user metadata
-          },
-        },
-      });
-      
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Registration successful! Check your email for verification.");
-        navigate("/dashboard");
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast.error("An unexpected error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Logout function
+// Login function
+const login = async (email: string, password: string) => {
+  setLoading(true);
+
+  try {
+    // Send email and password to the backend
+    const response = await axios.post("http://localhost:3000/login", { email, password },{withCredentials: true});
+
+    // Handle the server response
+    const { user } = response.data; // Extract user data from response
+    if (user) {
+      setUser(user); // Update the user context
+      toast.success("Login successful");
+      navigate("/dashboard"); // Navigate to dashboard
+    } else {
+      toast.error("Invalid credentials");
+    }
+  } catch (error) {
+    console.error("Login error:", error.response?.data || error.message);
+    toast.error("An unexpected error occurred");
+  } finally {
+    setLoading(false);
+  }
+};
+  
+
+
+const register = async (name: string, email: string, password: string) => {
+  setLoading(true);
+
+  try {
+    // Send a POST request to the backend API
+    const response = await axios.post("http://localhost:3000/register", { name, email, password });
+
+    // Handle successful registration
+    toast.success(response.data); // Backend will send a success message
+    navigate("/login");
+  } catch (error) {
+    // Handle errors from the backend
+    console.error("Registration error:", error.response?.data || error.message);
+    toast.error(error.response?.data || "An unexpected error occurred");
+  } finally {
+    setLoading(false);
+  }
+};
+
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success("Logged out successfully");
-        navigate("/login");
-      }
+      // Call the logout API
+      await axios.post("http://localhost:3000/logout", {}, { withCredentials: true }); // Ensure cookies are sent with the request
+      // Clear local session and navigate the user
+      setUser(null); // Clear local user session
+      toast.success("Logged out successfully"); // Show success message
+      navigate("/login"); // Redirect to the login page
     } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("An unexpected error occurred during logout");
+      console.error("Logout error:", error); // Log the error for debugging
+      toast.error("An unexpected error occurred during logout"); // Show error message
     }
+  
   };
+  
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        session,
+        setUser,
         loading,
         login,
         register,
         logout,
+        updateLoggedBefore,
         isAuthenticated: !!user,
       }}
     >

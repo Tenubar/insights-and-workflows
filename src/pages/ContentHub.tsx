@@ -1,7 +1,24 @@
-
 import DashboardLayout from "@/layouts/DashboardLayout";
+import { useEffect } from "react";
+import { checkSession } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext";
+
 
 const ContentHub = () => {
+  const { user, setUser } = useAuth();
+  
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const userData = await checkSession();
+      if (userData) {
+        setUser(userData);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
+
   return (
     <DashboardLayout>
       <div className="mb-8">

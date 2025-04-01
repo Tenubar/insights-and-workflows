@@ -1,14 +1,28 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { checkSession } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("user");
+  const { user, setUser } = useAuth();
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const userData = await checkSession();
+      if (userData) {
+        setUser(userData);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
 
   return (
     <DashboardLayout>

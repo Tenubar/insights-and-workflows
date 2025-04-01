@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,47 +7,34 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-type AgentSelectorProps = {
+type Agent = {
   id: string;
   name: string;
   description: string;
   avatar: string;
-  uGuid: string;
 };
 
+const agents: Agent[] = [
+  {
+    id: "",
+    name: "",
+    description: "",
+    avatar: "",
+  },
+];
 
-const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
-  const [agents, setAgents] = useState<AgentSelectorProps[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<AgentSelectorProps | null>(null);
+
+const AgentSelector = () => {
+  const [selectedAgent, setSelectedAgent] = useState<Agent>(agents[0]);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-
-    // Function to fetch agents from the back-end
-    const fetchAgents = async () => {
-      try {
-          const userId = uGuid;
-          const response = await fetch(`http://localhost:3000/api/get-agents/${userId}`);
-          const data = await response.json();
-          setAgents(data); // Update the agents state with fetched data
-          setSelectedAgent(data[0]); // Set the first agent as the default selection
-        
-      } catch (err) {
-        console.error("Error fetching agents:", err);
-      }
-    };
-
-    fetchAgents(); // Fetch agents on component mount
-  }, [uGuid]);
 
   const handleAgentClick = () => {
     setIsOpen(!isOpen); // Toggle the dropdown when clicking the main agent
   };
 
-  const handleChatButtonClick = (agent: AgentSelectorProps, e: React.MouseEvent) => {
+  const handleChatButtonClick = (agent: Agent, e: React.MouseEvent) => {
     e.stopPropagation();
-    // uGuid, agent.id
     navigate("/chat", { state: { agent } });
   };
 
@@ -63,42 +51,38 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
       </div>
 
       <div className="relative">
-        {selectedAgent && (
-          <button
-            onClick={handleAgentClick}
-            className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-gray-100"
-          >
-            <div className="flex items-center flex-1 mb-3 sm:mb-0">
-              <Avatar className="w-12 h-12 mr-4 shrink-0">
-                <AvatarImage src={selectedAgent.avatar} alt={selectedAgent.name} />
-                <AvatarFallback>{selectedAgent.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-medium">{selectedAgent.name}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                  {selectedAgent.description}
-                </p>
-              </div>
+        <button
+          onClick={handleAgentClick}
+          className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-gray-100"
+        >
+          <div className="flex items-center flex-1 mb-3 sm:mb-0">
+            <Avatar className="w-12 h-12 mr-4 shrink-0">
+              <AvatarImage src={selectedAgent.avatar} alt={selectedAgent.name} />
+              <AvatarFallback>{selectedAgent.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="font-medium">{selectedAgent.name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{selectedAgent.description}</p>
             </div>
-            <div className="flex items-center ml-0 sm:ml-4 w-full sm:w-auto">
-              <Button
-                onClick={(e) => handleChatButtonClick(selectedAgent, e)}
-                className="mr-3 flex items-center w-full sm:w-auto"
-                size="sm"
-              >
-                <MessageSquare className="mr-1" size={16} />
-                Chat with Agent
-              </Button>
-              <ChevronDown
-                size={16}
-                className={cn(
-                  "transition-transform duration-200",
-                  isOpen ? "transform rotate-180" : ""
-                )}
-              />
-            </div>
-          </button>
-        )}
+          </div>
+          <div className="flex items-center ml-0 sm:ml-4 w-full sm:w-auto">
+            <Button
+              onClick={(e) => handleChatButtonClick(selectedAgent, e)}
+              className="mr-3 flex items-center w-full sm:w-auto"
+              size="sm"
+            >
+              <MessageSquare className="mr-1" size={16} />
+              Chat with Agent
+            </Button>
+            <ChevronDown
+              size={16}
+              className={cn(
+                "transition-transform duration-200",
+                isOpen ? "transform rotate-180" : ""
+              )}
+            />
+          </div>
+        </button>
 
         <AnimatePresence>
           {isOpen && (
@@ -118,8 +102,8 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
                     }}
                     className={cn(
                       "w-full flex flex-col sm:flex-row items-start sm:items-center p-3 rounded-md relative",
-                      selectedAgent?.id === agent.id
-                        ? "bg-blue-50 dark:bg-blue-900/30"
+                      selectedAgent.id === agent.id 
+                        ? "bg-blue-50 dark:bg-blue-900/30" 
                         : "hover:bg-gray-50 dark:hover:bg-gray-700"
                     )}
                   >
@@ -129,9 +113,7 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
                     </Avatar>
                     <div className="flex-1 text-left mb-2 sm:mb-0 dark:text-gray-100">
                       <p className="font-medium">{agent.name}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                        {agent.description}
-                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{agent.description}</p>
                     </div>
                     <div className="flex items-center w-full sm:w-auto justify-between sm:justify-end">
                       <Button
@@ -142,7 +124,7 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
                         <MessageSquare className="mr-1" size={16} />
                         Chat
                       </Button>
-                      {selectedAgent?.id === agent.id && (
+                      {selectedAgent.id === agent.id && (
                         <Check size={16} className="text-primary ml-2" />
                       )}
                     </div>

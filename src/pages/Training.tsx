@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Save, Dumbbell } from "lucide-react";
@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { checkSession } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext";
 import * as z from "zod";
 
 const trainingFormSchema = z.object({
@@ -42,7 +44,19 @@ const defaultValues: Partial<TrainingFormValues> = {
 
 const Training = () => {
   const [isSaving, setIsSaving] = useState(false);
+  const { user, setUser } = useAuth();
   
+    useEffect(() => {
+      const fetchUserDetails = async () => {
+        const userData = await checkSession();
+        if (userData) {
+          setUser(userData);
+        }
+      };
+  
+      fetchUserDetails();
+    }, []);
+
   const form = useForm<TrainingFormValues>({
     resolver: zodResolver(trainingFormSchema),
     defaultValues,

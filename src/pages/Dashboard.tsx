@@ -1,17 +1,100 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import InsightCard from "@/components/InsightCard";
 import AgentSelector from "@/components/AgentSelector";
 import WorkflowList from "@/components/WorkflowList";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { checkSession } from "@/lib/utils"
+import axios from 'axios';
+
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, updateLoggedBefore, setUser } = useAuth();
   
   // Safely extract the user's name from metadata or use a fallback
-  const userName = user?.user_metadata?.name || "User";
+  const userName = user?.name || "User";
+  const loggedBefore = user?.loggedBefore;
+  const uGuid = user?.uGuid;
+  const id = ""; 
+  const name = "";
+  const description = "";
+  const avatar = "";
+  const [loading, setLoading] = useState(true); // New state for loading
+
+  useEffect(() => {
+    const checkLoggedBefore = async () => {
+
+      const fetchUserDetails = async () => {
+        const userData = await checkSession();
+        if (userData) {
+          setUser(userData);
+        }
+      };
   
+      fetchUserDetails();
+    
+      if (!loggedBefore && uGuid) {
+        try {
+          
+          await axios.post("http://localhost:3000/update-logged-before", {
+            uGuid,
+            loggedBefore: true,
+          },{withCredentials: true});
+
+          const [getAgent1, getAgent2] = await Promise.all([
+            axios.get(`http://localhost:3000/get-agent/${1}`),
+            axios.get(`http://localhost:3000/get-agent/${2}`),
+          ]);
+
+          const agents = [getAgent1, getAgent2]
+            .map((response, index) => {
+              if (response.data?.item) {
+                return {
+                  description: response.data.item.description,
+                  instructions: response.data.item.instructions,
+                  name: response.data.item.name,
+                  avatar: response.data.item.avatar,
+                  id: response.data.item.id,
+                  chat: [],
+                };
+              } else {
+                console.error(
+                  `Error: Agent ${index + 1} data or item is undefined`
+                );
+                return null;
+              }
+            })
+            .filter(Boolean);
+
+          await Promise.all(
+            agents.map(async (agent) => {
+              await axios.post("http://localhost:3000/post-agent", {
+                uGuid,
+                agent,
+              });
+              console.log(`Agent ${agent.name} posted successfully`);
+            })
+          );
+        } catch (err) {
+          console.error("Error updating loggedBefore:", err);
+        } finally {
+          updateLoggedBefore(true);
+          setLoading(false);
+          console.log("Logged Before updated successfully");
+        }
+      } else {
+        // If loggedBefore is true, stop the loading state
+        setLoading(false);
+      }
+    };
+
+    // Execute the function only once
+    checkLoggedBefore();
+  }, []); // Empty dependency array ensures useEffect runs once
+
+
+
   const insightData = [
     {
       title: "Time Saved",
@@ -71,17 +154,33 @@ const Dashboard = () => {
           </motion.div>
         ))}
       </div>
-      
+    
+
       <div className="mb-10">
-        <motion.h2 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-xl font-medium mb-4"
-        >
-          Your Assistant
-        </motion.h2>
-        <AgentSelector />
-      </div>
+      <motion.h2
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-xl font-medium mb-4"
+      >
+        Your Assistant
+      </motion.h2>
+
+      {!loading &&(
+        <AgentSelector
+          uGuid={uGuid}
+          id={id}
+          name={name}
+          description={description}
+          avatar={avatar}
+          // getAgents={getAgents}
+        />
+      )}
+
+      {loading && (
+        <p>Loading... Please wait.</p> // Optional loading indicator
+      )}
+    </div>
+
       
       <div>
         <motion.h2 

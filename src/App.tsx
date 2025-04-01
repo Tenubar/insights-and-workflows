@@ -22,6 +22,8 @@ import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import Chat from "./pages/Chat";
 
+
+
 const App = () => {
   // Create a new instance of QueryClient inside the component
   const [queryClient] = useState(() => new QueryClient());
