@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const checkSession = async () => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-user-details`, { withCredentials: true });
+    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/get-user-details`, { withCredentials: true });
     const userData = response.data.user;
     const userLogged = response.data.logged;
 
