@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+// import dotenv from 'dotenv';
+// dotenv.config();
 
 type User = {
   uGuid: string;
@@ -45,7 +47,7 @@ const login = async (email: string, password: string) => {
 
   try {
     // Send email and password to the backend
-    const response = await axios.post("http://localhost:3000/login", { email, password },{withCredentials: true});
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/login`, { email, password },{withCredentials: true});
 
     // Handle the server response
     const { user } = response.data; // Extract user data from response
@@ -71,7 +73,7 @@ const register = async (name: string, email: string, password: string) => {
 
   try {
     // Send a POST request to the backend API
-    const response = await axios.post("http://localhost:3000/register", { name, email, password });
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/register`, { name, email, password });
 
     // Handle successful registration
     toast.success(response.data); // Backend will send a success message
@@ -88,7 +90,7 @@ const register = async (name: string, email: string, password: string) => {
   const logout = async () => {
     try {
       // Call the logout API
-      await axios.post("http://localhost:3000/logout", {}, { withCredentials: true }); // Ensure cookies are sent with the request
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/logout`, {}, { withCredentials: true }); // Ensure cookies are sent with the request
       // Clear local session and navigate the user
       setUser(null); // Clear local user session
       toast.success("Logged out successfully"); // Show success message

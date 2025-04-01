@@ -27,7 +27,7 @@ const secretAccessKey = process.env.VITE_AWS_SECRET_ACCESS_KEY;
 
  app.use(
   cors({
-    origin: "http://localhost:8080", // Replace with your frontend URL
+    origin: "https://insights-and-workflows.onrender.com", // Replace with your frontend URL
     credentials: true, // Allow cookies to be sent and received
   })
 );

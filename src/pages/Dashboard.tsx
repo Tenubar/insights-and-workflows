@@ -37,14 +37,14 @@ const Dashboard = () => {
       if (!loggedBefore && uGuid) {
         try {
           
-          await axios.post("http://localhost:3000/update-logged-before", {
+          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/update-logged-before`, {
             uGuid,
             loggedBefore: true,
           },{withCredentials: true});
 
           const [getAgent1, getAgent2] = await Promise.all([
-            axios.get(`http://localhost:3000/get-agent/${1}`),
-            axios.get(`http://localhost:3000/get-agent/${2}`),
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-agent/${1}`),
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-agent/${2}`),
           ]);
 
           const agents = [getAgent1, getAgent2]
@@ -69,7 +69,7 @@ const Dashboard = () => {
 
           await Promise.all(
             agents.map(async (agent) => {
-              await axios.post("http://localhost:3000/post-agent", {
+              await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-agent`, {
                 uGuid,
                 agent,
               });

@@ -27,7 +27,7 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
     const fetchAgents = async () => {
       try {
           const userId = uGuid;
-          const response = await fetch(`http://localhost:3000/api/get-agents/${userId}`);
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/get-agents/${userId}`);
           const data = await response.json();
           setAgents(data); // Update the agents state with fetched data
           setSelectedAgent(data[0]); // Set the first agent as the default selection

@@ -25,13 +25,6 @@ interface ChatHistory {
   messages: Message[];
 }
 
-// interface ChatHistory {
-//   uGuid: string;
-//   userName: string;
-//   agentID: string;
-//   chat: Array<{ role: string; content: string }>;
-// }
-
 
 interface SuggestedPrompt {
   id: string;
@@ -91,16 +84,12 @@ const Chat = () => {
     // Extract basic info
     const uGuid = user.uGuid;
     const agentID = agent.id;
-
-    console.log(uGuid);
-    console.log(agentID); 
    
-
     try {
 
       // Fetch all chat histories for this user's agents
       const chatResponse = await axios.get(
-        `http://localhost:3000/chat-history-agent/${uGuid}/${agentID}`
+        `${import.meta.env.VITE_API_BASE_URL}/chat-history-agent/${uGuid}/${agentID}`
       );
   
       if (chatResponse.status !== 200) {
@@ -266,13 +255,9 @@ const Chat = () => {
     const userName = user.name;
     const agentID = agent.id;
 
-    // try {
-    //   const chatResponse = await axios.get<{ chat: ChatEntry[] }>(
-    //   `http://localhost:3000/chat-history-agent/${uGuid}/${agentID}`
-    // );
     try {
       const chatResponse = await axios.get(
-      `http://localhost:3000/chat-history-agent/${uGuid}/${agentID}`
+      `${import.meta.env.VITE_API_BASE_URL}/chat-history-agent/${uGuid}/${agentID}`
     );
 
     if (chatResponse.status !== 200) {
@@ -284,7 +269,7 @@ const Chat = () => {
     console.log(chat);
 
     // chat response
-    const response = await axios.post(`http://localhost:3000/api/chat/${uGuid}/${agentID}`, { userMessage, chat, userName});
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/chat/${uGuid}/${agentID}`, { userMessage, chat, userName});
     return response.data.reply; // Return the bot's response
 
     } catch (error) {
