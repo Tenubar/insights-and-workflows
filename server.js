@@ -29,7 +29,7 @@ console.log(region);
 
  app.use(
   cors({
-    origin: '*', // Replace with your frontend URL
+    origin: "https://insights-and-workflows-server.onrender.com", // Replace with your frontend URL
     credentials: true, // Allow cookies to be sent and received
   })
 );
