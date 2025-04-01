@@ -20,23 +20,30 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
   const [selectedAgent, setSelectedAgent] = useState<AgentSelectorProps | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
 
     // Function to fetch agents from the back-end
     const fetchAgents = async () => {
       try {
-          const userId = uGuid;
-          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/get-agents/${userId}`);
+          setLoading(true);
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/get-agents/${uGuid}`);
           const data = await response.json();
-          setAgents(data); // Update the agents state with fetched data
-          setSelectedAgent(data[0]); // Set the first agent as the default selection
-        
+          setAgents(data);
+          setSelectedAgent(data.length > 0 ? data[0] : null);
       } catch (err) {
-        console.error("Error fetching agents:", err);
+          console.error("Error fetching agents:", err);
+          setAgents([]);
+          setSelectedAgent(null);
+      } finally {
+          setLoading(false);
       }
-    };
-
+  };
+  
+  
+  
     fetchAgents(); // Fetch agents on component mount
   }, [uGuid]);
 
