@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -41,6 +42,19 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    // Check if the children contain a button element
+    const containsButtonElement = React.Children.toArray(props.children).some(
+      (child) => 
+        React.isValidElement(child) && 
+        (child.type === 'button' || 
+         (typeof child.type === 'object' && 
+          child.type?.displayName === 'Button'))
+    );
+
+    if (containsButtonElement) {
+      console.warn('Button component contains another button element as a child. This can cause DOM nesting issues.');
+    }
+
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
