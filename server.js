@@ -15,6 +15,8 @@ const region = process.env.VITE_AWS_REGION;
 const accessKeyId = process.env.VITE_AWS_ACCESS_KEY_ID;
 const secretAccessKey = process.env.VITE_AWS_SECRET_ACCESS_KEY;
 
+console.log(region);
+
 
  // Configure the DynamoDB client
  const client = new DynamoDBClient({
