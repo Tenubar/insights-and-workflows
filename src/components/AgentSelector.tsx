@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, MessageSquare } from "lucide-react";
@@ -24,7 +25,6 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
 
 
   useEffect(() => {
-
     // Function to fetch agents from the back-end
     const fetchAgents = async () => {
       console.log(uGuid);
@@ -42,9 +42,7 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
       } finally {
           setLoading(false);
       }
-  };
-  
-  
+    };
   
     fetchAgents(); // Fetch agents on component mount
   }, [uGuid]);
@@ -73,9 +71,9 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
 
       <div className="relative">
         {selectedAgent && (
-          <button
+          <div 
             onClick={handleAgentClick}
-            className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-gray-100"
+            className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-gray-100 cursor-pointer"
           >
             <div className="flex items-center flex-1 mb-3 sm:mb-0">
               <Avatar className="w-12 h-12 mr-4 shrink-0">
@@ -90,14 +88,16 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
               </div>
             </div>
             <div className="flex items-center ml-0 sm:ml-4 w-full sm:w-auto">
-              <Button
-                onClick={(e) => handleChatButtonClick(selectedAgent, e)}
-                className="mr-3 flex items-center w-full sm:w-auto"
-                size="sm"
-              >
-                <MessageSquare className="mr-1" size={16} />
-                Chat with Agent
-              </Button>
+              <div onClick={(e) => e.stopPropagation()}>
+                <Button
+                  onClick={(e) => handleChatButtonClick(selectedAgent, e)}
+                  className="mr-3 flex items-center w-full sm:w-auto"
+                  size="sm"
+                >
+                  <MessageSquare className="mr-1" size={16} />
+                  Chat with Agent
+                </Button>
+              </div>
               <ChevronDown
                 size={16}
                 className={cn(
@@ -106,7 +106,7 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
                 )}
               />
             </div>
-          </button>
+          </div>
         )}
 
         <AnimatePresence>
@@ -120,13 +120,13 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
             >
               <div className="p-2 grid grid-cols-1 gap-2">
                 {agents.map((agent) => (
-                  <button
+                  <div
                     key={agent.id}
                     onClick={() => {
                       setSelectedAgent(agent);
                     }}
                     className={cn(
-                      "w-full flex flex-col sm:flex-row items-start sm:items-center p-3 rounded-md relative",
+                      "w-full flex flex-col sm:flex-row items-start sm:items-center p-3 rounded-md relative cursor-pointer",
                       selectedAgent?.id === agent.id
                         ? "bg-blue-50 dark:bg-blue-900/30"
                         : "hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -143,19 +143,21 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
                       </p>
                     </div>
                     <div className="flex items-center w-full sm:w-auto justify-between sm:justify-end">
-                      <Button
-                        onClick={(e) => handleChatButtonClick(agent, e)}
-                        className="mr-3 flex items-center"
-                        size="sm"
-                      >
-                        <MessageSquare className="mr-1" size={16} />
-                        Chat
-                      </Button>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          onClick={(e) => handleChatButtonClick(agent, e)}
+                          className="mr-3 flex items-center"
+                          size="sm"
+                        >
+                          <MessageSquare className="mr-1" size={16} />
+                          Chat
+                        </Button>
+                      </div>
                       {selectedAgent?.id === agent.id && (
                         <Check size={16} className="text-primary ml-2" />
                       )}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </motion.div>

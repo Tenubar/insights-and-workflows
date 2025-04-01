@@ -46,9 +46,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const containsButtonElement = React.Children.toArray(props.children).some(
       (child) => 
         React.isValidElement(child) && 
-        (child.type === 'button' || 
+        ((typeof child.type === 'string' && child.type === 'button') || 
          (typeof child.type === 'object' && 
-          child.type?.displayName === 'Button'))
+          child.type !== null && 
+          'displayName' in child.type && 
+          child.type.displayName === 'Button'))
     );
 
     if (containsButtonElement) {
