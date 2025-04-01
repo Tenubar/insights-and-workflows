@@ -132,16 +132,16 @@ app.post("/login", async (req, res) => {
       // Set the token in a secure cookie
       res.cookie("session_token", token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "Strict",
+          secure: true,
+          sameSite: "None",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
         // Set the token in a secure cookie
         res.cookie("session_logged_token", logged_token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "Strict",
+          secure: true,
+          sameSite: "None",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
