@@ -190,15 +190,15 @@ app.post("/logout", (req, res) => {
   // Clear the session token cookie
   res.clearCookie("session_token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "None",
   });
 
   // Clear the session logged token cookie
   res.clearCookie("session_logged_token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "None",
   });
 
 
@@ -598,8 +598,8 @@ app.post("/update-logged-before", async (req, res) => {
         // Set the token in a secure cookie
         res.cookie("session_logged_token", logged_token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "Strict",
+          secure: true,
+          sameSite: "None",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
   
