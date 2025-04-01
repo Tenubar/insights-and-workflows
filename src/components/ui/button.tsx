@@ -42,15 +42,22 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
-    // Check if the children contain a button element
+    // Safely check if children contain a button element
     const containsButtonElement = React.Children.toArray(props.children).some(
-      (child) => 
-        React.isValidElement(child) && 
-        ((typeof child.type === 'string' && child.type === 'button') || 
-         (typeof child.type === 'object' && 
-          child.type !== null && 
-          'displayName' in child.type && 
-          child.type.displayName === 'Button'))
+      (child) => {
+        // Add type guard to check if child is a valid React element
+        if (!React.isValidElement(child)) return false;
+
+        // Safely check the type, handling potential null
+        const childType = child.type;
+        
+        // Check if it's a string element (like 'button') or a component with a displayName
+        return (typeof childType === 'string' && childType === 'button') || 
+               (typeof childType === 'object' && 
+                childType !== null && 
+                'displayName' in childType && 
+                childType.displayName === 'Button');
+      }
     );
 
     if (containsButtonElement) {
@@ -70,3 +77,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
+
