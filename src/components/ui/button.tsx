@@ -58,7 +58,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         
         // Check if it's a component with a displayName
         if (typeof childType === 'object' && childType !== null) {
-          return 'displayName' in childType && childType.displayName === 'Button';
+          // Safely check if displayName exists and matches
+          return (childType !== null && 
+                 'displayName' in childType && 
+                 childType.displayName === 'Button');
         }
         
         return false;

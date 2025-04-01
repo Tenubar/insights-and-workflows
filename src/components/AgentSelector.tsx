@@ -27,9 +27,7 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
   useEffect(() => {
     // Function to fetch agents from the back-end
     const fetchAgents = async () => {
-      console.log(uGuid);
       try {
-        console.log(uGuid);
           setLoading(true);
           const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/get-agents/${uGuid}`);
           const data = await response.json();
@@ -88,10 +86,11 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
               </div>
             </div>
             <div className="flex items-center ml-0 sm:ml-4 w-full sm:w-auto">
-              <div onClick={(e) => e.stopPropagation()}>
+              {/* Use a div with the Button component instead of nesting it inside a clickable element */}
+              <div className="mr-3">
                 <Button
                   onClick={(e) => handleChatButtonClick(selectedAgent, e)}
-                  className="mr-3 flex items-center w-full sm:w-auto"
+                  className="flex items-center w-full sm:w-auto"
                   size="sm"
                 >
                   <MessageSquare className="mr-1" size={16} />
@@ -143,10 +142,14 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
                       </p>
                     </div>
                     <div className="flex items-center w-full sm:w-auto justify-between sm:justify-end">
-                      <div onClick={(e) => e.stopPropagation()}>
+                      {/* Fix nesting issue - use div wrapper instead of event propagation */}
+                      <div className="mr-3">
                         <Button
-                          onClick={(e) => handleChatButtonClick(agent, e)}
-                          className="mr-3 flex items-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleChatButtonClick(agent, e);
+                          }}
+                          className="flex items-center"
                           size="sm"
                         >
                           <MessageSquare className="mr-1" size={16} />
