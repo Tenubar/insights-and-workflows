@@ -25,21 +25,13 @@ const secretAccessKey = process.env.VITE_AWS_SECRET_ACCESS_KEY;
    },
  });
 
-//  app.use(
-//   cors({
-//     origin: "https://insights-and-workflows.onrender.com", // Replace with your frontend URL
-//     credentials: true, // Allow cookies to be sent and received
-//   })
-// );
+ app.use(
+  cors({
+    origin: ["https://insights-and-workflows.onrender.com", "https://imgur.com/", "https://lovable.dev/"], // Replace with your frontend URL
+    credentials: true, // Allow cookies to be sent and received
+  })
+);
 
-
-app.use(cors({
-  origin: "*", // Allow requests from any domain
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
-  exposedHeaders: "Content-Type,Content-Length",
-  credentials: true, // Set to 'true' only if cookies/authentication are required
-}));
 
 
 app.use(cookieParser());
