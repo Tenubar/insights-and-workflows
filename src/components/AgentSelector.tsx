@@ -27,7 +27,9 @@ const AgentSelector = ({ uGuid }: AgentSelectorProps) => {
 
     // Function to fetch agents from the back-end
     const fetchAgents = async () => {
+      console.log(uGuid);
       try {
+        console.log(uGuid);
           setLoading(true);
           const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/get-agents/${uGuid}`);
           const data = await response.json();
