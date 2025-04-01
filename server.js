@@ -15,8 +15,6 @@ const region = process.env.VITE_AWS_REGION;
 const accessKeyId = process.env.VITE_AWS_ACCESS_KEY_ID;
 const secretAccessKey = process.env.VITE_AWS_SECRET_ACCESS_KEY;
 
-console.log(region);
-
 
  // Configure the DynamoDB client
  const client = new DynamoDBClient({
@@ -159,7 +157,7 @@ app.post("/login", async (req, res) => {
     }
   });
 
-  app.get('/api/get-user-details', (req, res) => {
+  app.get("/api/get-user-details", (req, res) => {
     const token_user = req.cookies.session_token; // Extract the session token cookie
     const token_logged = req.cookies.session_logged_token; // Extract the logged token cookie
 
@@ -183,24 +181,6 @@ app.post("/login", async (req, res) => {
         return res.status(401).json({ error: 'Invalid token' });
     }
 });
-
-
-// Auth 
-// const authenticate = (req, res, next) => {
-//   const token = req.cookies.session_token;
-
-//   if (!token) {
-//       return res.status(401).send("Access denied. No token provided.");
-//   }
-
-//   try {
-//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//       req.user = decoded; // Attach user info to the request object
-//       next();
-//   } catch (error) {
-//       return res.status(403).send("Invalid or expired token.");
-//   }
-// };
 
 
 
