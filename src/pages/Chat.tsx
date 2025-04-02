@@ -71,27 +71,13 @@ const Chat = () => {
   }, []);
   
 
-  // Update chat histories whenever a new message is added
-  useEffect(() => {
-    const updateChatHistory = async () => {
-      if (user && agent && messages.length > 0) {
-        const histories = await fetchAllChatHistories(user);
-        setChatHistories(histories);
-      }
-    };
-    
-    updateChatHistory();
-  }, [messages, user, agent]);
-
   async function fetchAllChatHistories(user) {
     if (!user || !agent) return [];
     
-    // Extract basic info
     const uGuid = user.uGuid;
     const agentID = agent.id;
    
     try {
-      // Fetch all chat histories for this user's agents
       const chatResponse = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/chat-history-agent/${uGuid}/${agentID}`
       );
@@ -104,13 +90,12 @@ const Chat = () => {
       const chat = chatResponse.data.chatLogs;
       const ids = chat.map(entry => entry.id);
   
-      // Convert the agentsData object into an array of ChatHistory objects.
       const chatHistories: ChatHistory[] = Object.entries(chat).map(
         ([agentID, data], index) => ({
           id: `${index + 1}`,
           date: (data as { role: string }).role.substring(0, 50),
           preview: (data as { content: string }).content.substring(0, 200),
-          messages: chat, // Should be an array of objects with role and content.
+          messages: chat,
         })
       );
   
@@ -121,32 +106,33 @@ const Chat = () => {
     }
   }
   
-  // Suggested prompts for the users
   const suggestedPrompts: SuggestedPrompt[] = [
     { id: "1", text: "What is the weather today?" },
     { id: "2", text: "Tell me a joke." },
     { id: "3", text: "How can I improve my productivity?" },
   ];
 
-
-
   useEffect(() => {
-    // Redirect if no agent data was passed
     if (!agent) {
       navigate("/dashboard");
     }
   }, [agent, navigate]);
 
   useEffect(() => {
-    // Scroll to bottom whenever messages change
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const updateChatHistory = async () => {
+      if (user && agent && messages.length > 0) {
+        const histories = await fetchAllChatHistories(user);
+        setChatHistories(histories);
+      }
+    };
+    
+    updateChatHistory();
+  }, [messages, user, agent]);
 
   const handleSendMessage = (content: string) => {
     if (!content.trim()) return;
     setIsLoading(true);
     
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -156,7 +142,6 @@ const Chat = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     
-    // Send message to agent and handle response
     getAgentResponse(content)
       .then(agentResponseContent => {
         const agentResponse: Message = {
@@ -180,7 +165,6 @@ const Chat = () => {
       return "User or Agent data not available.";
     }
     
-    // UserID and AgentID
     const uGuid = user.uGuid;
     const userName = user.name;
     const agentID = agent.id;
@@ -197,12 +181,11 @@ const Chat = () => {
 
       const chat = chatResponse.data.chatLogs;
 
-      // chat response
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/chat/${uGuid}/${agentID}`, 
         { userMessage, chat, userName }
       );
-      return response.data.reply; // Return the bot's response
+      return response.data.reply;
     } catch (error) {
       console.log(error);
       throw error;
@@ -224,7 +207,10 @@ const Chat = () => {
     setMessages(chatHistory.messages);
     setActiveTab("chat");
     
+<<<<<<< HEAD
     // Scroll to bottom of messages after a short delay to ensure DOM is updated
+=======
+>>>>>>> 863469f97b308254bb5512e01205b98ce0c4f7ed
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -234,7 +220,6 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#1A1F2C] text-white">
-      {/* Header */}
       <header className="flex items-center justify-between p-4 border-b border-gray-800">
         <div className="flex items-center">
           <Button 
@@ -287,7 +272,6 @@ const Chat = () => {
         </Tabs>
       </header>
       
-      {/* Main content */}
       <div className="flex-1 overflow-y-auto p-4">
         <AnimatePresence mode="wait">
           {activeTab === "chat" && (
@@ -297,7 +281,11 @@ const Chat = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
+<<<<<<< HEAD
               className="h-full pb-24" // Added padding at the bottom to prevent overlap with input
+=======
+              className="h-full pb-24"
+>>>>>>> 863469f97b308254bb5512e01205b98ce0c4f7ed
             >
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full overflow-y-auto max-h-[calc(100vh-200px)]">
@@ -351,7 +339,11 @@ const Chat = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
+<<<<<<< HEAD
               className="pb-16" // Added bottom margin
+=======
+              className="pb-16"
+>>>>>>> 863469f97b308254bb5512e01205b98ce0c4f7ed
             >
               <h2 className="text-xl font-semibold mb-4">Chat History</h2>
               <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-200px)]">
@@ -378,7 +370,6 @@ const Chat = () => {
         </AnimatePresence>
       </div>
       
-      {/* Input area */}
       {activeTab === "chat" && (
         <div className="fixed bottom-0 left-0 right-0 bg-[#222222] border-t border-gray-800 p-4">
           <div className="flex items-end gap-2 max-w-4xl mx-auto">
