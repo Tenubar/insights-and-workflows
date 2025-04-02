@@ -399,6 +399,8 @@ app.post("/post-agent", async (req, res) => {
   }
 });
 
+
+
 app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
   const { uGuid, agentID } = req.params;
 
@@ -446,6 +448,7 @@ app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
     const chatLogs = matchedAgent.M.chat?.L?.map((log, index) => ({
       role: log?.M?.role?.S || `No role provided (entry ${index + 1})`,
       content: log?.M?.content?.S || `No content provided (entry ${index + 1})`,
+      id: log?.M?.id?.S || `No id provided (entry ${index + 1})`,
     })) || [];
 
     // Send the formatted chat logs as the response
@@ -460,6 +463,8 @@ app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch chat history." });
   }
 });
+
+
 
 
 app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
@@ -518,17 +523,20 @@ app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
       return res.status(404).json({ error: "Agent not found." });
     }
 
+    const previousMessageCount = chatHistory.length;
+
     // Step 4: Create the new chat map you want to add.
     // It contains two items: one for the user's message and one for the assistant's message.
     const newChatEntry = {
       M: {
+        id: { S: `${previousMessageCount + 1}` },
         role: { S: "user" },
         content: { S: userMessage }
       }
     };
     const newAssistantEntry = {
       M: {
-        id: {S: "1"},
+        id: { S: `${previousMessageCount + 2}` },
         role: { S: "assistant" },
         content: { S: assistantMessage }
       }

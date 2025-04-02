@@ -98,15 +98,15 @@ const Chat = () => {
       }
   
       const chat = chatResponse.data.chatLogs;
+      const ids = chat.map(entry => entry.id);
   
       // Convert the agentsData object into an array of ChatHistory objects.
-      // We use Object.entries to get an array of [agentID, data] pairs.
-      
+
       const chatHistories: ChatHistory[] = Object.entries(chat).map(
-        ([agentID, data]) => ({
-          id: "1",
-          date: "placeholder",
-          preview : "placeholder",
+        ([agentID, data], index) => ({
+          id: `${index + 1}`,
+          date: (data as { role: string }).role.substring(0, 50),
+          preview: (data as { content: string }).content.substring(0, 200),
           messages: chat, // Should be an array of objects with role and content.
         })
       );
@@ -266,7 +266,6 @@ const Chat = () => {
     }
 
     const chat = chatResponse.data.chatLogs;
-    console.log(chat);
 
     // chat response
     const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/chat/${uGuid}/${agentID}`, { userMessage, chat, userName});
