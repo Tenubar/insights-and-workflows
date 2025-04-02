@@ -282,7 +282,6 @@ return (
             >
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full">
-                <div className="flex flex-col items-center justify-center h-full">
                   <div className="mb-8 text-center max-w-md">
                     <Avatar className="h-16 w-16 mb-4 mx-auto">
                       <img src={agent.avatar} alt={agent.name} className="rounded-full" />
@@ -336,7 +335,7 @@ return (
               className="pb-16" // Added bottom margin
             >
               <h2 className="text-xl font-semibold mb-4">Chat History</h2>
-              <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-200px)] flex flex-col-reverse">
+              <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-200px)]">
                 {chatHistories.length > 0 ? (
                   [...chatHistories].reverse().map((history) => (
                     <motion.div
