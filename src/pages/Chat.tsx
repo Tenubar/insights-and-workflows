@@ -232,7 +232,7 @@ const Chat = () => {
 
   if (!agent) return null;
 
-  return (
+return (
     <div className="flex flex-col h-screen bg-[#1A1F2C] text-white">
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b border-gray-800">
@@ -300,17 +300,17 @@ const Chat = () => {
               className="h-full pb-24" // Added padding at the bottom to prevent overlap with input
             >
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full overflow-y-auto max-h-[calc(100vh-200px)]">
+                <div className="flex flex-col items-center justify-center h-full">
                   <div className="mb-8 text-center max-w-md">
                     <Avatar className="h-16 w-16 mb-4 mx-auto">
                       <img src={agent.avatar} alt={agent.name} className="rounded-full" />
                     </Avatar>
                     <h2 className="text-xl font-semibold mb-2">{agent.name}</h2>
-                    <p className="text-gray-300 mb-6 overflow-y-auto max-h-[120px] scrollbar-thin">
+                    <p className="text-gray-300 mb-6 max-h-[120px] overflow-y-auto pr-1 scrollbar-thin">
                       {agent.description}
                     </p>
                     
-                    <div className="grid grid-cols-1 gap-3 mt-8 w-full max-w-md mx-auto overflow-y-auto max-h-[200px] pr-2">
+                    <div className="grid grid-cols-1 gap-3 mt-8 w-full max-w-md mx-auto max-h-[40vh] overflow-y-auto pr-2">
                       {suggestedPrompts.map((prompt) => (
                         <Button
                           key={prompt.id}
@@ -351,7 +351,7 @@ const Chat = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="pb-16" // Added bottom margin
+              className="pb-20" // Added bottom margin
             >
               <h2 className="text-xl font-semibold mb-4">Chat History</h2>
               <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-200px)]">
@@ -362,7 +362,8 @@ const Chat = () => {
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="bg-[#2A2F3C] rounded-lg p-4 hover:bg-[#3A3F4C] cursor-pointer"
+                      className="bg-[#2A2F3C] rounded-lg p-4 hover:bg-[#3A3F4C] cursor-pointer mb-2"
+                      
                       onClick={() => loadChatHistory(history)}
                     >
                       <div className="text-sm text-gray-400 mb-1">{history.date}</div>

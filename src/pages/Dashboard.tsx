@@ -21,8 +21,15 @@ const Dashboard = () => {
   const description = "";
   const avatar = "";
   const [loading, setLoading] = useState(true); // New state for loading
+  const [lastAgentId, setLastAgentId] = useState<string | null>(null);
 
   useEffect(() => {
+
+    const storedLastAgentId = localStorage.getItem('lastSelectedAgentId');
+    if (storedLastAgentId) {
+      setLastAgentId(storedLastAgentId);
+    }
+
     const checkLoggedBefore = async () => {
 
       const fetchUserDetails = async () => {
@@ -94,6 +101,10 @@ const Dashboard = () => {
   }, []); // Empty dependency array ensures useEffect runs once
 
 
+  const handleAgentSelected = (agentId: string) => {
+    localStorage.setItem('lastSelectedAgentId', agentId);
+    setLastAgentId(agentId);
+  };
 
   const insightData = [
     {
@@ -172,6 +183,8 @@ const Dashboard = () => {
           name={name}
           description={description}
           avatar={avatar}
+          lastAgentId={lastAgentId}
+          onAgentSelected={handleAgentSelected}
           // getAgents={getAgents}
         />
       )}
