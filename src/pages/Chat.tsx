@@ -120,12 +120,14 @@ const Chat = () => {
     }
   }
   
-  // Suggested prompts for the user
+  // Suggested prompts for the users
   const suggestedPrompts: SuggestedPrompt[] = [
     { id: "1", text: "What is the weather today?" },
     { id: "2", text: "Tell me a joke." },
     { id: "3", text: "How can I improve my productivity?" },
   ];
+
+
 
   useEffect(() => {
     // Redirect if no agent data was passed
