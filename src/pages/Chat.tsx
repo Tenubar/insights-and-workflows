@@ -70,10 +70,7 @@ const Chat = () => {
     fetchUserDetails();
   }, []);
 
-<<<<<<< HEAD
   // Update chat histories whenever a new message is added
-=======
->>>>>>> 7f4ef53f0371f96d6ad27125ffe6740e0dd763b9
   useEffect(() => {
     const updateChatHistory = async () => {
       if (user && agent && messages.length > 0) {
@@ -123,10 +120,7 @@ const Chat = () => {
     }
   }
   
-<<<<<<< HEAD
   // Suggested prompts for the user
-=======
->>>>>>> 7f4ef53f0371f96d6ad27125ffe6740e0dd763b9
   const suggestedPrompts: SuggestedPrompt[] = [
     { id: "1", text: "What is the weather today?" },
     { id: "2", text: "Tell me a joke." },
