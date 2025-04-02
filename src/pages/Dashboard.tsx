@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import InsightCard from "@/components/InsightCard";
@@ -8,6 +9,14 @@ import { useEffect, useState } from "react";
 import { checkSession } from "@/lib/utils"
 import axios from 'axios';
 
+// Define interface for agent data
+interface Agent {
+  id: string;
+  name: string;
+  description: string;
+  avatar: string;
+  chat: Array<any>;
+}
 
 const Dashboard = () => {
   const { user, updateLoggedBefore, setUser } = useAuth();
@@ -20,8 +29,11 @@ const Dashboard = () => {
   const name = "";
   const description = "";
   const avatar = "";
-  const [loading, setLoading] = useState(true); // New state for loading
+  const [loading, setLoading] = useState(true);
   const [lastAgentId, setLastAgentId] = useState<string | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [totalConversations, setTotalConversations] = useState(0);
+  const [workflowsCount, setWorkflowsCount] = useState(0);
 
   useEffect(() => {
     const storedLastAgentId = localStorage.getItem('lastSelectedAgentId');
@@ -30,7 +42,6 @@ const Dashboard = () => {
     }
 
     const checkLoggedBefore = async () => {
-
       const fetchUserDetails = async () => {
         const userData = await checkSession();
         if (userData) {
@@ -99,6 +110,42 @@ const Dashboard = () => {
     checkLoggedBefore();
   }, []); // Empty dependency array ensures useEffect runs once
 
+  // Fetch agents and calculate total conversations
+  useEffect(() => {
+    const fetchAgentsAndConversations = async () => {
+      if (uGuid) {
+        try {
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/agents/${uGuid}`
+          );
+          
+          if (response.data && Array.isArray(response.data.agents)) {
+            setAgents(response.data.agents);
+            
+            // Calculate total conversations
+            let totalMessages = 0;
+            for (const agent of response.data.agents) {
+              if (agent.chat && Array.isArray(agent.chat)) {
+                totalMessages += agent.chat.length;
+              }
+            }
+            setTotalConversations(totalMessages);
+          }
+        } catch (error) {
+          console.error("Error fetching agents data:", error);
+        }
+      }
+    };
+    
+    // Get workflow count from WorkflowList component's data
+    const workflowsData = WorkflowList().props.children.props.children[1].props.children;
+    if (workflowsData && Array.isArray(workflowsData)) {
+      setWorkflowsCount(workflowsData.length);
+    }
+    
+    fetchAgentsAndConversations();
+  }, [uGuid]);
+
   const handleAgentSelected = (agentId: string) => {
     localStorage.setItem('lastSelectedAgentId', agentId);
     setLastAgentId(agentId);
@@ -110,24 +157,28 @@ const Dashboard = () => {
       value: "32 hours",
       type: "time" as const,
       change: 12,
+      tooltip: "Total time saved using AI assistants"
     },
     {
       title: "Active Agents",
-      value: 4,
+      value: loading ? "..." : agents.length,
       type: "agents" as const,
       change: 33,
+      tooltip: "Amount of agents available"
     },
     {
       title: "Workflows",
-      value: 16,
+      value: workflowsCount,
       type: "workflows" as const,
       change: 8,
+      tooltip: "Amount of workflows available"
     },
     {
       title: "AI Conversations",
-      value: 247,
+      value: totalConversations,
       type: "conversations" as const,
       change: -5,
+      tooltip: "Chat messages"
     },
   ];
   
@@ -164,7 +215,6 @@ const Dashboard = () => {
         ))}
       </div>
     
-
       <div className="mb-10">
       <motion.h2
         initial={{ opacity: 0 }}
@@ -192,7 +242,6 @@ const Dashboard = () => {
       )}
     </div>
 
-      
       <div>
         <motion.h2 
           initial={{ opacity: 0 }}
