@@ -24,7 +24,6 @@ const Dashboard = () => {
   const [lastAgentId, setLastAgentId] = useState<string | null>(null);
 
   useEffect(() => {
-
     const storedLastAgentId = localStorage.getItem('lastSelectedAgentId');
     if (storedLastAgentId) {
       setLastAgentId(storedLastAgentId);
@@ -99,7 +98,6 @@ const Dashboard = () => {
     // Execute the function only once
     checkLoggedBefore();
   }, []); // Empty dependency array ensures useEffect runs once
-
 
   const handleAgentSelected = (agentId: string) => {
     localStorage.setItem('lastSelectedAgentId', agentId);
