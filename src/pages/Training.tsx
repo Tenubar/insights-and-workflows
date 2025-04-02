@@ -71,7 +71,16 @@ const Training = () => {
     toast.success("Training data saved successfully!");
     setIsSaving(false);
     
-    console.log(data);
+    // Convert form data to array format and log it
+    const formDataArray = [
+      { field: "About Yourself", value: data.aboutYourself },
+      { field: "Your Niche", value: data.yourNiche },
+      { field: "Your Offers", value: data.yourOffers },
+      { field: "About Business", value: data.aboutBusiness },
+      { field: "About Website", value: data.aboutWebsite }
+    ];
+    
+    console.log("Training form data as array:", formDataArray);
   };
 
   return (
