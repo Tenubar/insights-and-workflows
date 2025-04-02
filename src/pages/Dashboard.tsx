@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import InsightCard from "@/components/InsightCard";
@@ -8,6 +9,14 @@ import { useEffect, useState } from "react";
 import { checkSession } from "@/lib/utils"
 import axios from 'axios';
 
+// Define interface for agent data
+interface Agent {
+  id: string;
+  name: string;
+  description: string;
+  avatar: string;
+  chat: Array<any>;
+}
 
 // Define interface for agent data
 interface Agent {
@@ -29,7 +38,7 @@ const Dashboard = () => {
   const name = "";
   const description = "";
   const avatar = "";
-  const [loading, setLoading] = useState(true); // New state for loading
+  const [loading, setLoading] = useState(true);
   const [lastAgentId, setLastAgentId] = useState<string | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [totalConversations, setTotalConversations] = useState(0);
@@ -42,7 +51,6 @@ const Dashboard = () => {
     }
 
     const checkLoggedBefore = async () => {
-
       const fetchUserDetails = async () => {
         const userData = await checkSession();
         if (userData) {
