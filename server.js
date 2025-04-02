@@ -318,6 +318,7 @@ app.get("/api/get-agents/:uGuid", async (req, res) => {
       name: agent.M.name.S,
       description: agent.M.description.S,
       avatar: agent.M.avatar.S,
+      chat: agent.M.chat.L
     })) || [];
     
 
@@ -451,9 +452,12 @@ app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
       id: log?.M?.id?.S || `No id provided (entry ${index + 1})`,
     })) || [];
 
+    const agentIntruction = matchedAgent.M.instructions?.S  || "";
+
     // Send the formatted chat logs as the response
     res.status(200).json({
       chatLogs: chatLogs,
+      instructions: agentIntruction
     });
 
 
@@ -469,7 +473,7 @@ app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
 
 app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
   const { uGuid, agentID } = req.params;
-  const { userMessage, chat: chatHistory, userName } = req.body;
+  const { userMessage, chat: chatHistory, userName, instructions } = req.body;
 
   try {
     // Step 1: Call the OpenAI API to get the assistant's response.
@@ -479,6 +483,9 @@ app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: `Hi, my name is ${userName}` },
+          {
+            role: 'system', content: instructions
+          },
           ...chatHistory,
           { role: 'user', content: userMessage }
         ],
@@ -492,7 +499,7 @@ app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
         },
       }
     );
-
+    
     const assistantMessage = response.data.choices[0].message.content;
 
     // Step 2: Retrieve the entire item using the userID (uGuid).

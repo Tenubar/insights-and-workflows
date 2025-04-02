@@ -199,6 +199,7 @@ const Training = () => {
             </div>
             
             {/* Save Button */}
+            
             <div className="flex justify-end">
               <Button 
                 type="submit" 
@@ -224,6 +225,7 @@ const Training = () => {
                 )}
               </Button>
             </div>
+
           </form>
         </Form>
       </div>
