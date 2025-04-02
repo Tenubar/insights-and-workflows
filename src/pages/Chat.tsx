@@ -69,6 +69,7 @@ const Chat = () => {
     };
     fetchUserDetails();
   }, []);
+  
 
   // Update chat histories whenever a new message is added
   useEffect(() => {
@@ -222,6 +223,11 @@ const Chat = () => {
   const loadChatHistory = (chatHistory: ChatHistory) => {
     setMessages(chatHistory.messages);
     setActiveTab("chat");
+    
+    // Scroll to bottom of messages after a short delay to ensure DOM is updated
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   if (!agent) return null;
@@ -291,20 +297,20 @@ const Chat = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="h-full"
+              className="h-full pb-24" // Added padding at the bottom to prevent overlap with input
             >
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full">
+                <div className="flex flex-col items-center justify-center h-full overflow-y-auto max-h-[calc(100vh-200px)]">
                   <div className="mb-8 text-center max-w-md">
                     <Avatar className="h-16 w-16 mb-4 mx-auto">
                       <img src={agent.avatar} alt={agent.name} className="rounded-full" />
                     </Avatar>
                     <h2 className="text-xl font-semibold mb-2">{agent.name}</h2>
-                    <p className="text-gray-300 mb-6">
+                    <p className="text-gray-300 mb-6 overflow-y-auto max-h-[120px] scrollbar-thin">
                       {agent.description}
                     </p>
                     
-                    <div className="grid grid-cols-1 gap-3 mt-8 w-full max-w-md mx-auto">
+                    <div className="grid grid-cols-1 gap-3 mt-8 w-full max-w-md mx-auto overflow-y-auto max-h-[200px] pr-2">
                       {suggestedPrompts.map((prompt) => (
                         <Button
                           key={prompt.id}
@@ -345,9 +351,10 @@ const Chat = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
+              className="pb-16" // Added bottom margin
             >
               <h2 className="text-xl font-semibold mb-4">Chat History</h2>
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-200px)]">
                 {chatHistories.length > 0 ? (
                   chatHistories.map((history) => (
                     <motion.div
@@ -394,7 +401,7 @@ const Chat = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="absolute right-2 bottom-2 text-gray-400 hover:text-white hover:bg-transparent"
+                className="absolute right-2 bottom-2 text-gray-400 hover:text-white hover:bg-blue-600 transition-colors duration-200"
                 onClick={() => handleSendMessage(inputValue)}
                 disabled={!inputValue.trim() || isLoading}
               >
@@ -411,5 +418,6 @@ const Chat = () => {
     </div>
   );
 };
+
 
 export default Chat;
