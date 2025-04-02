@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -51,6 +52,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     )
   }
 )
+// Fix TypeScript error by setting displayName directly on the Button component
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
