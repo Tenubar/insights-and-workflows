@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import InsightCard from "@/components/InsightCard";
@@ -8,15 +7,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { checkSession } from "@/lib/utils"
 import axios from 'axios';
-
-// Define interface for agent data
-interface Agent {
-  id: string;
-  name: string;
-  description: string;
-  avatar: string;
-  chat: Array<any>;
-}
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Define interface for agent data
 interface Agent {
@@ -43,6 +34,7 @@ const Dashboard = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [totalConversations, setTotalConversations] = useState(0);
   const [workflowsCount, setWorkflowsCount] = useState(0);
+  const [insightsLoading, setInsightsLoading] = useState(true);
 
   useEffect(() => {
     const storedLastAgentId = localStorage.getItem('lastSelectedAgentId');
@@ -64,7 +56,6 @@ const Dashboard = () => {
     
       if (!loggedBefore && uGuid) {
         try {
-          
           await axios.post(`${import.meta.env.VITE_API_BASE_URL}/update-logged-before`, {
             uGuid,
             loggedBefore: true,
@@ -112,28 +103,23 @@ const Dashboard = () => {
           console.log("Logged Before updated successfully");
         }
       } else {
-        // If loggedBefore is true, stop the loading state
         setLoading(false);
       }
 
       const fetchAgentsAndConversations = async (uGuid: string) => {
+        setInsightsLoading(true);
         if (!uGuid || typeof uGuid !== "string") {
           console.error("Error: uGuid is not provided.");
+          setInsightsLoading(false);
           return;
         }
     
         try {
-          // Make an API request to fetch agents
           const response = await axios.get(
             `${import.meta.env.VITE_API_BASE_URL}/api/get-agents/${uGuid}`
           );
     
-          // Ensure the response contains valid data
           if (response) {
-            const agentsList = response.data;
-          
-
-            // Update the agents state
             setAgents(response.data);
     
             let totalMessages = 0;
@@ -143,25 +129,23 @@ const Dashboard = () => {
               }
             }
             setTotalConversations(totalMessages);
-
+            
+            setWorkflowsCount(4);
           } else {
             console.warn("Warning: Invalid response format. Expected an array of agents.");
           }
         } catch (error) {
           console.error("Error fetching agents data:", error.message || error);
+        } finally {
+          setInsightsLoading(false);
         }
       };
 
     };
 
-    // Execute the function only once
     checkLoggedBefore();
   }, []); // Empty dependency array ensures useEffect runs once
 
-
-  // Fetch agents and calculate total conversations
-
-  
   const handleAgentSelected = (agentId: string) => {
     localStorage.setItem('lastSelectedAgentId', agentId);
     setLastAgentId(agentId);
@@ -177,21 +161,21 @@ const Dashboard = () => {
     },
     {
       title: "Active Agents",
-      value: loading ? "..." : agents.length,
+      value: insightsLoading ? "..." : agents.length,
       type: "agents" as const,
       change: 0,
       tooltip: "Agents Available"
     },
     {
       title: "Workflows",
-      value: workflowsCount,
+      value: insightsLoading ? "..." : workflowsCount,
       type: "workflows" as const,
       change: 0,
       tooltip: "Workflows Available"
     },
     {
       title: "AI Conversations",
-      value: totalConversations,
+      value: insightsLoading ? "..." : totalConversations,
       type: "conversations" as const,
       change: 0,
       tooltip: "Chat Messages"
@@ -226,7 +210,17 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <InsightCard {...insight} />
+            {insightsLoading ? (
+              <div className="glass dark:glass-dark rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+                <Skeleton className="h-8 w-16 mt-4" />
+              </div>
+            ) : (
+              <InsightCard {...insight} />
+            )}
           </motion.div>
         ))}
       </div>
@@ -249,7 +243,6 @@ const Dashboard = () => {
           avatar={avatar}
           lastAgentId={lastAgentId}
           onAgentSelected={handleAgentSelected}
-          // getAgents={getAgents}
         />
       )}
 

@@ -14,6 +14,7 @@ import { checkSession } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext";
 import axios from 'axios';
 import * as z from "zod";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const trainingFormSchema = z.object({
   Yourself: z.string().min(10, {
@@ -55,22 +56,21 @@ const Training = () => {
 
   const { user, setUser } = useAuth();
   
-    useEffect(() => {
-      const fetchUserDetails = async () => {
-        const userData = await checkSession();
-        if (userData) {
-          setUser(userData);
-        }
-      };
-  
-      fetchUserDetails();
-    }, []);
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const userData = await checkSession();
+      if (userData) {
+        setUser(userData);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
 
   const form = useForm<TrainingFormValues>({
     resolver: zodResolver(trainingFormSchema),
     defaultValues,
   });
-  // const form = useForm({ defaultValues: {} });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,6 +81,7 @@ const Training = () => {
       }
   
       const uGuid = user.uGuid;
+      setLoading(true);
   
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-training-data/${uGuid}`);
@@ -93,13 +94,16 @@ const Training = () => {
         }, {});
   
         console.log("Fetched training data:", formValues);
+        
+        // Log the data as an array
+        console.log("Training data as array:", trainingInfo);
   
         // Add a flag to prevent refetching
         setInitialData({ ...formValues, hasBeenFetched: true });
         form.reset(formValues); // Populate the form fields with fetched data
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching training data:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -107,16 +111,11 @@ const Training = () => {
     fetchData();
   }, [user, initialData]);
 
-
-
   const onSubmit = async (data: TrainingFormValues) => {
     setIsSaving(true);
     
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    toast.success("Training data saved successfully!");
-    setIsSaving(false);
     
     // Convert form data to array format and log it
     const formDataArray = [
@@ -126,11 +125,71 @@ const Training = () => {
       { field: "Business", value: data.Business },
       { field: "Website", value: data.Website }
     ];
+    
+    console.log("Form submitted data as array:", formDataArray);
 
     const uGuid = user.uGuid;
-     await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-training-data/${uGuid}`, {
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-training-data/${uGuid}`, {
       formDataArray,
     });
+    
+    toast.success("Training data saved successfully!");
+    setIsSaving(false);
+  };
+
+  // Load animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  const renderFormField = (name: keyof TrainingFormValues, label: string, description: string, inputType: "input" | "textarea" = "textarea") => {
+    if (loading) {
+      return (
+        <motion.div variants={itemVariants} className="space-y-2">
+          <Skeleton className="h-5 w-1/4 mb-1" />
+          <Skeleton className={`w-full ${inputType === "textarea" ? "h-[100px]" : "h-10"}`} />
+          <Skeleton className="h-4 w-2/3" />
+        </motion.div>
+      );
+    }
+    
+    return (
+      <FormField
+        control={form.control}
+        name={name}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{label}</FormLabel>
+            <FormControl>
+              {inputType === "textarea" ? (
+                <Textarea 
+                  placeholder={`Enter ${label.toLowerCase()}...`} 
+                  className="min-h-[100px] resize-y"
+                  {...field} 
+                />
+              ) : (
+                <Input placeholder={`Enter ${label.toLowerCase()}...`} {...field} />
+              )}
+            </FormControl>
+            <FormDescription>
+              {description}
+            </FormDescription>
+          </FormItem>
+        )}
+      />
+    );
   };
 
   return (
@@ -142,70 +201,47 @@ const Training = () => {
       
       <div className="glass dark:glass-dark rounded-xl p-8 overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <motion.form 
+            onSubmit={form.handleSubmit(onSubmit)} 
+            className="space-y-8"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {/* Context Info Section */}
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
                 <Dumbbell className="h-5 w-5" />
                 Context Info
               </h2>
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="Yourself"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>About Yourself</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Tell us about yourself..." 
-                          className="min-h-[100px] resize-y"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Share details about yourself that will help your agent understand you better.
-                      </FormDescription>
-                    </FormItem>
+              <motion.div className="space-y-4" variants={containerVariants}>
+                <motion.div variants={itemVariants}>
+                  {renderFormField(
+                    "Yourself", 
+                    "About Yourself",
+                    "Share details about yourself that will help your agent understand you better.",
+                    "textarea"
                   )}
-                />
+                </motion.div>
                 
-                <FormField
-                  control={form.control}
-                  name="Niche"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your Niche</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Digital Marketing, Finance, Health..." {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        What specific area or industry do you specialize in?
-                      </FormDescription>
-                    </FormItem>
+                <motion.div variants={itemVariants}>
+                  {renderFormField(
+                    "Niche",
+                    "Your Niche",
+                    "What specific area or industry do you specialize in?",
+                    "input"
                   )}
-                />
+                </motion.div>
                 
-                <FormField
-                  control={form.control}
-                  name="Offers"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your Offers</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe your products or services..." 
-                          className="min-h-[100px] resize-y"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Describe the products or services you offer to your clients or customers.
-                      </FormDescription>
-                    </FormItem>
+                <motion.div variants={itemVariants}>
+                  {renderFormField(
+                    "Offers",
+                    "Your Offers",
+                    "Describe the products or services you offer to your clients or customers.",
+                    "textarea"
                   )}
-                />
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
             
             {/* Business Info Section */}
@@ -214,56 +250,36 @@ const Training = () => {
                 <Dumbbell className="h-5 w-5" />
                 Business Info
               </h2>
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="Business"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>About Your Business</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Tell us about your business..." 
-                          className="min-h-[100px] resize-y"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Share details about your business mission, vision, and values.
-                      </FormDescription>
-                    </FormItem>
+              <motion.div className="space-y-4" variants={containerVariants}>
+                <motion.div variants={itemVariants}>
+                  {renderFormField(
+                    "Business",
+                    "About Your Business",
+                    "Share details about your business mission, vision, and values.",
+                    "textarea"
                   )}
-                />
+                </motion.div>
                 
-                <FormField
-                  control={form.control}
-                  name="Website"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>About Your Website</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Share details about your website..." 
-                          className="min-h-[100px] resize-y"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Describe your website's purpose, content, and target audience.
-                      </FormDescription>
-                    </FormItem>
+                <motion.div variants={itemVariants}>
+                  {renderFormField(
+                    "Website",
+                    "About Your Website",
+                    "Describe your website's purpose, content, and target audience.",
+                    "textarea"
                   )}
-                />
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
             
             {/* Save Button */}
-
-            <div className="flex justify-end">
+            <motion.div 
+              className="flex justify-end"
+              variants={itemVariants}
+            >
               <Button 
                 type="submit" 
                 className="gap-2"
-                disabled={isSaving}
+                disabled={isSaving || loading}
               >
                 {isSaving ? (
                   <>
@@ -283,9 +299,8 @@ const Training = () => {
                   </>
                 )}
               </Button>
-            </div>
-
-          </form>
+            </motion.div>
+          </motion.form>
         </Form>
       </div>
     </DashboardLayout>
