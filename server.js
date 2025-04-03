@@ -402,6 +402,82 @@ app.post("/post-agent", async (req, res) => {
 
 
 
+// Define the API endpoint
+app.post("/post-training-data/:uGuid", async (req, res) => {
+  const { uGuid } = req.params; // Extract user GUID from route parameters
+  const { formDataArray } = req.body; // Extract form data from request body
+
+  // Input validation
+  if (!uGuid || !Array.isArray(formDataArray)) {
+    return res.status(400).json({ error: "Invalid input data" });
+  }
+
+  // Transform formDataArray into a LIST of MAPS compatible with DynamoDB
+  const trainingInfoList = formDataArray.map((item) => ({
+    M: {
+      field: { S: item.field }, // Field name
+      value: { S: item.value }, // Field value
+    },
+  }));
+
+  // DynamoDB UpdateItem parameters
+  const params = {
+    TableName: "project_users", // Replace with your table name
+    Key: {
+      uGuid: { S: uGuid }, // Replace 'userGuid' with your actual partition key name
+    },
+    UpdateExpression: "SET trainingInfo = :info",
+    ExpressionAttributeValues: {
+      ":info": { L: trainingInfoList }, // List of Maps
+    },
+    ReturnValues: "UPDATED_NEW",
+  };
+
+  try {
+    // Execute the DynamoDB update command
+    const command = new UpdateItemCommand(params);
+    const response = await client.send(command);
+    res.status(200).json({ message: "Training data saved successfully", data: response });
+  } catch (err) {
+    console.error("Error updating trainingInfo:", err);
+    res.status(500).json({ error: "Failed to save training data", details: err.message });
+  }
+});
+
+
+app.get("/get-training-data/:uGuid", async (req, res) => {
+  const { uGuid } = req.params; // Extract user GUID from the route parameter
+
+  // DynamoDB GetItem parameters
+  const params = {
+    TableName: "project_users", // Replace with your table name
+    Key: {
+      uGuid: { S: uGuid }, // Replace 'userGuid' with your actual primary key name
+    },
+  };
+
+  try {
+    const command = new GetItemCommand(params);
+    const response = await client.send(command);
+
+    if (!response.Item) {
+      return res.status(404).json({ message: "No training data found for this user." });
+    }
+
+    // Extract and format trainingInfo LIST
+    const trainingInfo = response.Item.trainingInfo?.L.map((entry) => ({
+      field: entry.M.field.S,
+      value: entry.M.value.S,
+    }));
+
+    res.status(200).json({ trainingInfo });
+  } catch (err) {
+    console.error("Error fetching training data:", err);
+    res.status(500).json({ error: "Failed to fetch training data", details: err.message });
+  }
+});
+
+
 app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
   const { uGuid, agentID } = req.params;
 
@@ -499,7 +575,7 @@ app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
         },
       }
     );
-    
+
     const assistantMessage = response.data.choices[0].message.content;
 
     // Step 2: Retrieve the entire item using the userID (uGuid).

@@ -12,22 +12,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { checkSession } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext";
+import axios from 'axios';
 import * as z from "zod";
 
 const trainingFormSchema = z.object({
-  aboutYourself: z.string().min(10, {
+  Yourself: z.string().min(10, {
     message: "About yourself must be at least 10 characters.",
   }),
-  yourNiche: z.string().min(3, {
+  Niche: z.string().min(3, {
     message: "Your niche must be at least 3 characters.",
   }),
-  yourOffers: z.string().min(10, {
+  Offers: z.string().min(10, {
     message: "Your offers must be at least 10 characters.",
   }),
-  aboutBusiness: z.string().min(10, {
+  Business: z.string().min(10, {
     message: "About your business must be at least 10 characters.",
   }),
-  aboutWebsite: z.string().min(10, {
+  Website: z.string().min(10, {
     message: "About your website must be at least 10 characters.",
   }),
 });
@@ -35,15 +36,23 @@ const trainingFormSchema = z.object({
 type TrainingFormValues = z.infer<typeof trainingFormSchema>;
 
 const defaultValues: Partial<TrainingFormValues> = {
-  aboutYourself: "",
-  yourNiche: "",
-  yourOffers: "",
-  aboutBusiness: "",
-  aboutWebsite: "",
+  Yourself: "",
+  Niche: "",
+  Offers: "",
+  Business: "",
+  Website: "",
 };
 
 const Training = () => {
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  interface InitialData {
+    hasBeenFetched?: boolean;
+    [key: string]: any;
+  }
+
+  const [initialData, setInitialData] = useState<InitialData>({});
+
   const { user, setUser } = useAuth();
   
     useEffect(() => {
@@ -61,6 +70,44 @@ const Training = () => {
     resolver: zodResolver(trainingFormSchema),
     defaultValues,
   });
+  // const form = useForm({ defaultValues: {} });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // Skip fetching if initialData has been fetched or user/uGuid is unavailable
+      if (!user || !user.uGuid || initialData?.hasBeenFetched) {
+        console.log("Skipping fetch: User data not available or already fetched.");
+        return;
+      }
+  
+      const uGuid = user.uGuid;
+  
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-training-data/${uGuid}`);
+        const trainingInfo = response.data.trainingInfo;
+  
+        // Transform trainingInfo into initial form values
+        const formValues = trainingInfo.reduce((acc, item) => {
+          acc[item.field] = item.value;
+          return acc;
+        }, {});
+  
+        console.log("Fetched training data:", formValues);
+  
+        // Add a flag to prevent refetching
+        setInitialData({ ...formValues, hasBeenFetched: true });
+        form.reset(formValues); // Populate the form fields with fetched data
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching training data:", error);
+        setLoading(false);
+      }
+    };
+  
+    fetchData();
+  }, [user, initialData]);
+
+
 
   const onSubmit = async (data: TrainingFormValues) => {
     setIsSaving(true);
@@ -71,7 +118,19 @@ const Training = () => {
     toast.success("Training data saved successfully!");
     setIsSaving(false);
     
-    console.log(data);
+    // Convert form data to array format and log it
+    const formDataArray = [
+      { field: "Yourself", value: data.Yourself },
+      { field: "Niche", value: data.Niche },
+      { field: "Offers", value: data.Offers },
+      { field: "Business", value: data.Business },
+      { field: "Website", value: data.Website }
+    ];
+
+    const uGuid = user.uGuid;
+     await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-training-data/${uGuid}`, {
+      formDataArray,
+    });
   };
 
   return (
@@ -93,7 +152,7 @@ const Training = () => {
               <div className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="aboutYourself"
+                  name="Yourself"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>About Yourself</FormLabel>
@@ -113,7 +172,7 @@ const Training = () => {
                 
                 <FormField
                   control={form.control}
-                  name="yourNiche"
+                  name="Niche"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Your Niche</FormLabel>
@@ -129,7 +188,7 @@ const Training = () => {
                 
                 <FormField
                   control={form.control}
-                  name="yourOffers"
+                  name="Offers"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Your Offers</FormLabel>
@@ -158,7 +217,7 @@ const Training = () => {
               <div className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="aboutBusiness"
+                  name="Business"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>About Your Business</FormLabel>
@@ -178,7 +237,7 @@ const Training = () => {
                 
                 <FormField
                   control={form.control}
-                  name="aboutWebsite"
+                  name="Website"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>About Your Website</FormLabel>
@@ -199,7 +258,7 @@ const Training = () => {
             </div>
             
             {/* Save Button */}
-            
+
             <div className="flex justify-end">
               <Button 
                 type="submit" 
