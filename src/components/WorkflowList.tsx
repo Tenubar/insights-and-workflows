@@ -1,6 +1,7 @@
 
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Clock, GitBranchPlus } from "lucide-react";
+import { ArrowRight, Clock, GitBranchPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type Workflow = {
   id: string;
@@ -46,6 +47,8 @@ const workflows: Workflow[] = [
 ];
 
 const WorkflowList = () => {
+  const navigate = useNavigate();
+  
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -59,6 +62,10 @@ const WorkflowList = () => {
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
+  };
+
+  const handleWorkflowClick = (id: string) => {
+    navigate(`/workflow/${id}`);
   };
 
   return (
@@ -83,6 +90,7 @@ const WorkflowList = () => {
             variants={item}
             whileHover={{ x: 4 }}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center cursor-pointer transition-all hover:shadow-sm"
+            onClick={() => handleWorkflowClick(workflow.id)}
           >
             <div>
               <div className="flex items-center">
