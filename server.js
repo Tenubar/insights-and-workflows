@@ -489,7 +489,7 @@ app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
       ExpressionAttributeValues: {
         ":uGuid": { S: uGuid },
       },
-      ProjectionExpression: "agents", // Retrieve the `agents` list
+      ProjectionExpression: "agents, trainingInfo", // Retrieve the `agents` list
     };
 
     // Execute the query
@@ -530,10 +530,18 @@ app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
 
     const agentIntruction = matchedAgent.M.instructions?.S  || "";
 
+      // Format `trainingData`
+      const trainingData = data.Items[0]?.trainingInfo?.L?.map((item) => ({
+        field: item.M?.field?.S || "No field provided",
+        value: item.M?.value?.S || "No value provided",
+      })) || [];
+
+
     // Send the formatted chat logs as the response
     res.status(200).json({
       chatLogs: chatLogs,
-      instructions: agentIntruction
+      instructions: agentIntruction,
+      trainingData: trainingData
     });
 
 
@@ -549,7 +557,7 @@ app.get("/chat-history-agent/:uGuid/:agentID", async (req, res) => {
 
 app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
   const { uGuid, agentID } = req.params;
-  const { userMessage, chat: chatHistory, userName, instructions } = req.body;
+  const { userMessage, chat: chatHistory, userName, instructions, trainingData } = req.body;
 
   try {
     // Step 1: Call the OpenAI API to get the assistant's response.
@@ -561,6 +569,9 @@ app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
           { role: 'system', content: `Hi, my name is ${userName}` },
           {
             role: 'system', content: instructions
+          },
+          {
+            role: 'system', content: `About me: ${trainingData.map((item) => `${item.field}: ${item.value}`).join('\n')}`
           },
           ...chatHistory,
           { role: 'user', content: userMessage }

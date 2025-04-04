@@ -182,12 +182,16 @@ const Chat = () => {
 
       const chat = chatResponse.data.chatLogs;
       const instructions = chatResponse.data.instructions;
+      const trainingData = chatResponse.data.trainingData;
+
+      // console.log(trainingData.map((item) => `${item.field}: ${item.value}`).join('\n'));
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/chat/${uGuid}/${agentID}`, 
-        { userMessage, chat, userName, instructions }
+        { userMessage, chat, userName, instructions, trainingData }
       );
       return response.data.reply;
+
     } catch (error) {
       console.log(error);
       throw error;
