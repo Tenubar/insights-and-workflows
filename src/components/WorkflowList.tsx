@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { ArrowRight, Clock, GitBranchPlus, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, Clock, GitBranchPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { 
@@ -75,15 +75,12 @@ const ITEMS_PER_PAGE = 5;
 
 const WorkflowList = () => {
   const navigate = useNavigate();
-  const [expanded, setExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
   const totalPages = Math.ceil(workflows.length / ITEMS_PER_PAGE);
   const hasMoreThanOnePage = workflows.length > ITEMS_PER_PAGE;
   
-  const displayedWorkflows = expanded 
-    ? workflows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE) 
-    : workflows.slice(0, ITEMS_PER_PAGE);
+  const displayedWorkflows = workflows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   
   const container = {
     hidden: { opacity: 0 },
@@ -102,13 +99,6 @@ const WorkflowList = () => {
 
   const handleWorkflowClick = (id: string) => {
     navigate(`/workflow/${id}`);
-  };
-
-  const toggleExpand = () => {
-    setExpanded(!expanded);
-    if (!expanded) {
-      setCurrentPage(1);
-    }
   };
 
   const handlePageChange = (page: number) => {
@@ -182,37 +172,21 @@ const WorkflowList = () => {
 
       {hasMoreThanOnePage && (
         <div className="mt-6">
-          <button
-            onClick={toggleExpand}
-            className="w-full flex items-center justify-center py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md transition-colors"
-          >
-            {expanded ? (
-              <>
-                Show Less <ChevronUp size={16} className="ml-2" />
-              </>
-            ) : (
-              <>
-                Show More <ChevronDown size={16} className="ml-2" />
-              </>
-            )}
-          </button>
-
-          {expanded && (
-            <Pagination className="mt-4">
-              <PaginationContent>
-                {Array.from({ length: totalPages }).map((_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink 
-                      isActive={currentPage === index + 1}
-                      onClick={() => handlePageChange(index + 1)}
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-              </PaginationContent>
-            </Pagination>
-          )}
+          <Pagination className="mt-4">
+            <PaginationContent>
+              {Array.from({ length: totalPages }).map((_, index) => (
+                <PaginationItem key={index}>
+                  <PaginationLink 
+                    isActive={currentPage === index + 1}
+                    onClick={() => handlePageChange(index + 1)}
+                    className="cursor-pointer transition-all hover:bg-primary/10 active:bg-primary/20 active:scale-95"
+                  >
+                    {index + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>
