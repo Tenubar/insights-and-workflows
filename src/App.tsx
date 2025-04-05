@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import Chat from "./pages/Chat";
+import WorkflowDetail from "./pages/WorkflowDetail";
 
 
 
@@ -46,6 +47,7 @@ const App = () => {
                   <Route path="/content-hub" element={<ContentHub />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/chat" element={<Chat />} />
+                  <Route path="/workflow/:id" element={<WorkflowDetail />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AnimatePresence>

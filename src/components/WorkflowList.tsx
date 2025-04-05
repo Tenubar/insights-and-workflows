@@ -1,6 +1,6 @@
-
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Clock, GitBranchPlus } from "lucide-react";
+import { ArrowRight, Clock, GitBranchPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type Workflow = {
   id: string;
@@ -17,7 +17,6 @@ const workflows: Workflow[] = [
     name: "Customer Onboarding",
     description: "Automate customer welcome and setup process",
     status: "active",
-    lastRun: "2 hours ago",
     steps: 5,
   },
   {
@@ -25,7 +24,6 @@ const workflows: Workflow[] = [
     name: "Data Analysis Pipeline",
     description: "Process and analyze customer data for insights",
     status: "active",
-    lastRun: "1 day ago",
     steps: 8,
   },
   {
@@ -40,12 +38,20 @@ const workflows: Workflow[] = [
     name: "Support Ticket Triage",
     description: "Automatically categorize and assign support tickets",
     status: "active",
-    lastRun: "Just now",
+    steps: 3,
+  },
+  {
+    id: "5",
+    name: "Support Ticket Triage",
+    description: "Automatically categorize and assign support tickets",
+    status: "active",
     steps: 3,
   },
 ];
 
 const WorkflowList = () => {
+  const navigate = useNavigate();
+  
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -59,6 +65,10 @@ const WorkflowList = () => {
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
+  };
+
+  const handleWorkflowClick = (id: string) => {
+    navigate(`/workflow/${id}`);
   };
 
   return (
@@ -83,6 +93,7 @@ const WorkflowList = () => {
             variants={item}
             whileHover={{ x: 4 }}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center cursor-pointer transition-all hover:shadow-sm"
+            onClick={() => handleWorkflowClick(workflow.id)}
           >
             <div>
               <div className="flex items-center">
