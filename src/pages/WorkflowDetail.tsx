@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, History } from "lucide-react";
+import { ArrowLeft, Play, History, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/layouts/DashboardLayout";
@@ -73,11 +72,10 @@ const mockWorkflowRuns: WorkflowRun[] = [
   { id: "run5", date: "2025-03-31 17:20", status: "running", duration: "ongoing" },
 ];
 
-// Input field type
+// Input field type (modified to remove enabled property)
 type InputField = {
   id: string;
   name: string;
-  enabled: boolean;
   value: string;
 };
 
@@ -90,10 +88,13 @@ const WorkflowDetail = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
   const [inputs, setInputs] = useState<InputField[]>([
-    { id: "1", name: "Customer Email", enabled: true, value: "" },
-    { id: "2", name: "Welcome Message", enabled: true, value: "" },
-    { id: "3", name: "Priority Level", enabled: false, value: "" },
+    { id: "1", name: "Customer Email", value: "" },
+    { id: "2", name: "Welcome Message", value: "" },
+    { id: "3", name: "Priority Level", value: "" },
   ]);
+
+  // Determine if all inputs have at least one character
+  const allInputsValid = inputs.every(input => input.value.trim().length > 0);
 
   useEffect(() => {
     // Simulate loading data
@@ -116,20 +117,15 @@ const WorkflowDetail = () => {
     );
   };
 
-  const handleEnableChange = (inputId: string, enabled: boolean) => {
-    setInputs(prev => 
-      prev.map(input => 
-        input.id === inputId ? { ...input, enabled } : input
-      )
-    );
-  };
-
   const handleRunWorkflow = () => {
-    const enabledInputs = inputs
-      .filter(input => input.enabled)
-      .map(input => ({ name: input.name, value: input.value }));
+    if (!allInputsValid) {
+      toast.error("All fields are required to run the workflow");
+      return;
+    }
     
-    console.log("Running workflow with inputs:", enabledInputs);
+    const inputValues = inputs.map(input => ({ name: input.name, value: input.value }));
+    
+    console.log("Running workflow with inputs:", inputValues);
     toast.success("Workflow started successfully!");
   };
 
@@ -270,24 +266,18 @@ const WorkflowDetail = () => {
                           <div className="flex items-center justify-between">
                             <Label 
                               htmlFor={`input-${input.id}`}
-                              className={!input.enabled ? "text-gray-400 dark:text-gray-500" : ""}
+                              className="flex items-center"
                             >
-                              {input.name}
+                              {input.name} <span className="text-red-500 ml-1">*</span>
                             </Label>
                             <div className="flex items-center gap-2">
-                              <Checkbox 
-                                id={`enable-${input.id}`}
-                                checked={input.enabled}
-                                onCheckedChange={(checked) => 
-                                  handleEnableChange(input.id, checked as boolean)
-                                }
-                              />
-                              <Label 
-                                htmlFor={`enable-${input.id}`}
-                                className="text-sm text-gray-500 dark:text-gray-400"
-                              >
-                                Enable
-                              </Label>
+                              <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                                input.value.trim().length > 0 
+                                  ? "bg-green-500 border-green-500 text-white" 
+                                  : "border-gray-300 dark:border-gray-600"
+                              }`}>
+                                {input.value.trim().length > 0 && <Check size={14} />}
+                              </div>
                             </div>
                           </div>
                           
@@ -296,18 +286,18 @@ const WorkflowDetail = () => {
                               id={`input-${input.id}`}
                               value={input.value}
                               onChange={(e) => handleInputChange(input.id, e.target.value)}
-                              disabled={!input.enabled}
                               placeholder={`Enter ${input.name.toLowerCase()}...`}
                               className="w-full"
+                              required
                             />
                           ) : (
                             <Input
                               id={`input-${input.id}`}
                               value={input.value}
                               onChange={(e) => handleInputChange(input.id, e.target.value)}
-                              disabled={!input.enabled}
                               placeholder={`Enter ${input.name.toLowerCase()}...`}
                               className="w-full"
+                              required
                             />
                           )}
                         </div>
@@ -320,6 +310,7 @@ const WorkflowDetail = () => {
                       size="lg" 
                       onClick={handleRunWorkflow}
                       className="px-8"
+                      disabled={!allInputsValid}
                     >
                       <Play size={18} className="mr-2" />
                       Run Workflow
