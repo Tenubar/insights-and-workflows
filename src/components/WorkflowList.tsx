@@ -160,7 +160,7 @@ const WorkflowList = () => {
               <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center mr-4">
                   <GitBranchPlus size={12} className="mr-1" />
-                  <span>{workflow.steps} steps</span>
+                  <span>{Array.isArray(workflow.steps) ? workflow.steps.length : 0} steps</span>
                 </div>
                 
                 {workflow.lastRun && (

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Play, History, Check } from "lucide-react";
@@ -17,18 +18,9 @@ type Workflow = {
   description: string;
   status: "active" | "draft" | "archived";
   lastRun?: string;
-  steps: number;
+  steps: Array<any>;
   workflowData?: any; // For API response format
 };
-
-// Define a workflow run type
-// type WorkflowRun = {
-//   id: string;
-//   date: string;
-//   status: "success" | "failed" | "running";
-//   duration: string;
-//   workflowData?: any;
-// };
 
 // Define a workflow run type
 type WorkflowRun = {
@@ -90,7 +82,7 @@ const WorkflowDetail = () => {
           name: "Workflow " + id,
           description: "This is a workflow description",
           status: "active" as const,
-          steps: 5
+          steps: []
         };
         setWorkflow(mockWorkflow);
         setWorkflowRuns(mockWorkflowRuns);
