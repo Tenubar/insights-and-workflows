@@ -122,7 +122,6 @@ const Dashboard = () => {
             uGuid,
             agent,
           });
-          console.log(`Agent ${agent.name} posted successfully`);
         })
       );
 
@@ -163,12 +162,10 @@ const Dashboard = () => {
 
       await Promise.all(
         workflows.map(async (workflow) => {
-          console.log(workflow);
           await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-workflow`, {
             uGuid,
             workflow,
           });
-          console.log(`Workflow ${workflow.name} posted successfully`);
         })
       );
 
