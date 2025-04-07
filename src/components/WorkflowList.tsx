@@ -19,7 +19,11 @@ type Workflow = {
   description: string;
   status: "active" | "draft" | "archived";
   lastRun?: string;
-  steps: Array<any>;
+  steps: Array<{
+    id: string;
+    name: string;
+    type?: string;
+  }>;
 };
 
 
@@ -45,16 +49,16 @@ const WorkflowList = () => {
   const [error, setError] = useState<string | null>(null);
   const { user, setUser } = useAuth();
   
-    useEffect(() => {
-      const fetchUserDetails = async () => {
-        const userData = await checkSession();
-        if (userData) {
-          setUser(userData);
-        }
-      };
-  
-      fetchUserDetails();
-    }, []);
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const userData = await checkSession();
+      if (userData) {
+        setUser(userData);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
 
   useEffect(() => {
     const fetchWorkflows = async () => {
@@ -70,8 +74,35 @@ const WorkflowList = () => {
         }
         const data = await response.json();
         console.log(data);
-        setWorkflows(data);
-
+        
+        const processedData = data.map((workflow) => {
+          // Extract steps and ensure proper structure
+          let steps = [];
+          if (workflow.steps && typeof workflow.steps === "object") {
+            steps = Object.entries(workflow.steps).map(([key, value]) => ({
+              id: key.toLowerCase().replace(/\s+/g, "_"), // Generate an ID based on the key
+              name: key, // Use the key as the name of the step
+              type: typeof value === "object" && (value as { S?: string }).S === "" ? "text" : "unknown", // Default type 'text' if S is empty
+              value: (value as { S?: string })?.S || "", // Safely cast value to the expected type
+            }));
+          }
+        
+          // If steps is empty, add some default steps
+          if (steps.length === 0) {
+            steps = [
+              // { id: "default_step1", name: "Default Step 1", type: "text", value: "" },
+              // { id: "default_step2", name: "Default Step 2", type: "textarea", value: "" },
+            ];
+          }
+        
+          return {
+            ...workflow,
+            steps,
+          };
+        });
+        
+        
+        setWorkflows(processedData);
       } catch (err) {
         setError("Failed to load workflows. Please try again later.");
       } finally {
@@ -160,7 +191,7 @@ const WorkflowList = () => {
               <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center mr-4">
                   <GitBranchPlus size={12} className="mr-1" />
-                  <span>{workflow.steps} steps</span>
+                  <span>{Array.isArray(workflow.steps) ? workflow.steps.length : 0} steps</span>
                 </div>
                 
                 {workflow.lastRun && (

@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Play, History, Check } from "lucide-react";
+import { ArrowLeft, Play, History, Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,18 +18,13 @@ type Workflow = {
   description: string;
   status: "active" | "draft" | "archived";
   lastRun?: string;
-  steps: number;
+  steps: Array<{
+    id: string;
+    name: string;
+    type?: string;
+  }>;
   workflowData?: any; // For API response format
 };
-
-// Define a workflow run type
-// type WorkflowRun = {
-//   id: string;
-//   date: string;
-//   status: "success" | "failed" | "running";
-//   duration: string;
-//   workflowData?: any;
-// };
 
 // Define a workflow run type
 type WorkflowRun = {
@@ -38,20 +34,12 @@ type WorkflowRun = {
   duration: string;
 };
 
-// Mock workflow runs
-const mockWorkflowRuns: WorkflowRun[] = [
-  { id: "run1", date: "2025-04-04 14:30", status: "success", duration: "45s" },
-  { id: "run2", date: "2025-04-03 10:15", status: "failed", duration: "12s" },
-  { id: "run3", date: "2025-04-02 16:45", status: "success", duration: "1m 20s" },
-  { id: "run4", date: "2025-04-01 09:30", status: "success", duration: "37s" },
-  { id: "run5", date: "2025-03-31 17:20", status: "running", duration: "ongoing" },
-];
-
 // Input field type
 type InputField = {
   id: string;
   name: string;
   value: string;
+  type?: string;
 };
 
 const WorkflowDetail = () => {
@@ -63,11 +51,8 @@ const WorkflowDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
-  const [inputs, setInputs] = useState<InputField[]>([
-    { id: "67f1cbe75cdf0944c9b89615", name: "Customer Email", value: "" },
-    { id: "2", name: "Welcome Message", value: "" },
-    { id: "3", name: "Priority Level", value: "" },
-  ]);
+  const [inputs, setInputs] = useState<InputField[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
 
   const allInputsValid = inputs.every(input => input.value.trim().length > 0);
 
@@ -77,7 +62,27 @@ const WorkflowDetail = () => {
     
     if (workflowFromState) {
       setWorkflow(workflowFromState);
-      setWorkflowRuns(mockWorkflowRuns);
+      
+      // Initialize inputs based on workflow steps
+      if (Array.isArray(workflowFromState.steps) && workflowFromState.steps.length > 0) {
+        const initialInputs = workflowFromState.steps.map(step => ({
+          id: step.id || Math.random().toString(36).substr(2, 9),
+          name: step.name || "Untitled Input",
+          value: "",
+          type: step.type || "text"
+        }));
+        setInputs(initialInputs);
+      } else {
+        // Default inputs if no steps are defined
+        setInputs([
+          { id: "default1", name: "Customer Email", value: "", type: "text" },
+          { id: "default2", name: "Welcome Message", value: "", type: "textarea" },
+          { id: "default3", name: "Priority Level", value: "", type: "text" }
+        ]);
+      }
+      
+      // Initialize with empty workflow runs
+      setWorkflowRuns([]);
       setLoading(false);
     } else if (id) {
       // Fallback: fetch workflow by ID if not available in state
@@ -90,10 +95,25 @@ const WorkflowDetail = () => {
           name: "Workflow " + id,
           description: "This is a workflow description",
           status: "active" as const,
-          steps: 5
+          steps: [
+            { id: "step1", name: "Customer Email", type: "text" },
+            { id: "step2", name: "Welcome Message", type: "textarea" },
+            { id: "step3", name: "Priority Level", type: "text" }
+          ]
         };
         setWorkflow(mockWorkflow);
-        setWorkflowRuns(mockWorkflowRuns);
+        
+        // Initialize inputs based on workflow steps
+        const initialInputs = mockWorkflow.steps.map(step => ({
+          id: step.id,
+          name: step.name,
+          value: "",
+          type: step.type
+        }));
+        setInputs(initialInputs);
+        
+        // Initialize with empty workflow runs
+        setWorkflowRuns([]);
         setLoading(false);
       }, 800);
     }
@@ -115,7 +135,33 @@ const WorkflowDetail = () => {
   
     const inputValues = inputs.map(input => ({ name: input.name, value: input.value }));
     console.log("Running workflow with inputs:", inputValues);
+    
+    // Set is running to true to disable the button
+    setIsRunning(true);
+    
+    // Create a new workflow run with running status
+    const newRun: WorkflowRun = {
+      id: `run-${Date.now()}`,
+      date: new Date().toLocaleString(),
+      status: "running",
+      duration: "ongoing"
+    };
+    
+    // Add to workflow runs at the top
+    setWorkflowRuns(prev => [newRun, ...prev]);
+    
+    // Show success toast
     toast.success("Workflow started successfully!");
+    
+    // Simulate workflow completion after 3 seconds
+    setTimeout(() => {
+      setIsRunning(false);
+      // Update the status of the workflow run to success
+      setWorkflowRuns(prev => [
+        { ...prev[0], status: "success", duration: "2.5s" },
+        ...prev.slice(1)
+      ]);
+    }, 3000);
   };
 
   const toggleHistory = () => {
@@ -229,7 +275,7 @@ const WorkflowDetail = () => {
                 >
                   <motion.div variants={itemVariants} className="flex justify-between items-center">
                     <h1 className="text-3xl font-bold tracking-tight mb-2">
-                      {workflow.workflowData?.workflow_name?.S || workflow.name}
+                      {workflow?.workflowData?.workflow_name?.S || workflow?.name}
                     </h1>
                     <Button 
                       variant="outline" 
@@ -242,7 +288,7 @@ const WorkflowDetail = () => {
                   </motion.div>
                   
                   <motion.div variants={itemVariants} className="text-gray-500 dark:text-gray-400 -mt-6">
-                    {workflow.workflowData?.description?.S || workflow.description}
+                    {workflow?.workflowData?.description?.S || workflow?.description}
                   </motion.div>
                   
                   <motion.div 
@@ -272,7 +318,7 @@ const WorkflowDetail = () => {
                             </div>
                           </div>
                           
-                          {input.name === "Welcome Message" ? (
+                          {input.type === "textarea" ? (
                             <Textarea
                               id={`input-${input.id}`}
                               value={input.value}
@@ -301,10 +347,19 @@ const WorkflowDetail = () => {
                       size="lg" 
                       onClick={handleRunWorkflow}
                       className="px-8"
-                      disabled={!allInputsValid}
+                      disabled={!allInputsValid || isRunning}
                     >
-                      <Play size={18} className="mr-2" />
-                      Run Workflow
+                      {isRunning ? (
+                        <>
+                          <Clock size={18} className="mr-2 animate-pulse" />
+                          Running...
+                        </>
+                      ) : (
+                        <>
+                          <Play size={18} className="mr-2" />
+                          Run Workflow
+                        </>
+                      )}
                     </Button>
                   </motion.div>
                 </motion.div>
@@ -336,32 +391,48 @@ const WorkflowDetail = () => {
                   transition={{ delay: 0.2 }}
                 >
                   <h1 className="text-3xl font-bold tracking-tight mb-6">
-                    {workflow.workflowData?.workflow_name?.S || workflow.name} History
+                    {workflow?.workflowData?.workflow_name?.S || workflow?.name} History
                   </h1>
                   
-                  <div className="space-y-4">
-                    {workflowRuns.map(run => (
-                      <motion.div
-                        key={run.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center cursor-pointer hover:shadow-sm transition-all"
-                      >
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{run.date}</span>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(run.status)}`}>
-                              {run.status.charAt(0).toUpperCase() + run.status.slice(1)}
-                            </span>
+                  {workflowRuns.length === 0 ? (
+                    <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                      <p className="text-gray-500 dark:text-gray-400">No workflow runs yet</p>
+                      <p className="text-sm mt-2 text-gray-400 dark:text-gray-500">
+                        Run the workflow to see history here
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {workflowRuns.map(run => (
+                        <motion.div
+                          key={run.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center cursor-pointer hover:shadow-sm transition-all"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{run.date}</span>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(run.status)}`}>
+                                {run.status === 'running' ? (
+                                  <span className="flex items-center">
+                                    <Clock size={10} className="mr-1 animate-pulse" />
+                                    Running
+                                  </span>
+                                ) : (
+                                  run.status.charAt(0).toUpperCase() + run.status.slice(1)
+                                )}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                              Duration: {run.duration}
+                            </div>
                           </div>
-                          <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Duration: {run.duration}
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm">View Details</Button>
-                      </motion.div>
-                    ))}
-                  </div>
+                          <Button variant="ghost" size="sm">View Details</Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               </motion.div>
             )}

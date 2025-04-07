@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import InsightCard from "@/components/InsightCard";
@@ -8,6 +9,7 @@ import { useEffect, useState } from "react";
 import { checkSession } from "@/lib/utils"
 import axios from 'axios';
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/components/ui/sonner";
 
 // Define interface for agent data
 interface Agent {
@@ -35,6 +37,7 @@ const Dashboard = () => {
   const [totalConversations, setTotalConversations] = useState(0);
   const [workflowsCount, setWorkflowsCount] = useState(0);
   const [insightsLoading, setInsightsLoading] = useState(true);
+  const [dataFetched, setDataFetched] = useState(false);
 
   useEffect(() => {
     const storedLastAgentId = localStorage.getItem('lastSelectedAgentId');
@@ -42,159 +45,191 @@ const Dashboard = () => {
       setLastAgentId(storedLastAgentId);
     }
 
-    const checkLoggedBefore = async () => {
-      const fetchUserDetails = async () => {
+    const initialize = async () => {
+      setLoading(true);
+      setInsightsLoading(true);
+      
+      try {
+        // Get current user data
         const userData = await checkSession();
         if (userData) {
           setUser(userData);
-          const uGuid = userData.uGuid;
-          fetchAgentsAndConversations(uGuid);
-        }
-      };
-  
-      fetchUserDetails();
-    
-      if (!loggedBefore && uGuid) {
-        try {
-
-          // Agents data fetching and posting
-
-          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/update-logged-before`, {
-            uGuid,
-            loggedBefore: true,
-          },{withCredentials: true});
-
-          const [getAgent1, getAgent2] = await Promise.all([
-            axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-agent/${1}`),
-            axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-agent/${2}`),
-          ]);
-
-          const agents = [getAgent1, getAgent2]
-            .map((response, index) => {
-              if (response.data?.item) {
-                return {
-                  description: response.data.item.description,
-                  instructions: response.data.item.instructions,
-                  name: response.data.item.name,
-                  avatar: response.data.item.avatar,
-                  id: response.data.item.id,
-                  chat: [],
-                };
-              } else {
-                console.error(
-                  `Error: Agent ${index + 1} data or item is undefined`
-                );
-                return null;
-              }
-            })
-            .filter(Boolean);
-
-          await Promise.all(
-            agents.map(async (agent) => {
-              await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-agent`, {
-                uGuid,
-                agent,
-              });
-              console.log(`Agent ${agent.name} posted successfully`);
-            })
-          );
-
-          // Workflows data fetching and posting
-          const workflow1 = 'en32bviety20nmfs8m';
-          const [getWorkflow1] = await Promise.all([
-            axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-workflow/${workflow1}`),
-          ]);
-
-          const workflows = [getWorkflow1]
-            .map((response, index) => {
-              if (response.data?.item) {
-                const workflowData =
-                typeof response.data.item.workflowData === "string"
-                  ? JSON.parse(response.data.item.workflowData) // Parse if string
-                  : response.data.item.workflowData; // Use as is if already an object
-
-                const steps =  
-                typeof response.data.item.steps === "string"
-                ? JSON.parse(response.data.item.steps) // Parse if string
-                : response.data.item.steps; // Use as is if already an object
-
-                return {
-                  description: response.data.item.description,
-                  name: response.data.item.name,
-                  status: response.data.item.status,
-                  steps,
-                  workflowData
-                };
-              } else {
-                console.error(
-                  `Error: Agent ${index + 1} data or item is undefined`
-                );
-                return null;
-              }
-            })
-            .filter(Boolean);
-
-            await Promise.all(
-              workflows.map(async (workflow) => {
-                console.log(workflow);
-                await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-workflow`, {
-                  uGuid,
-                  workflow,
-                });
-                console.log(`Workflow ${workflow.name} posted successfully`);
-              })
-            );
-
-        } catch (err) {
-          console.error("Error updating loggedBefore:", err);
-        } finally {
-          updateLoggedBefore(true);
-          setLoading(false);
-          console.log("Logged Before updated successfully");
-        }
-      } else {
-        setLoading(false);
-      }
-
-      const fetchAgentsAndConversations = async (uGuid: string) => {
-        setInsightsLoading(true);
-        if (!uGuid || typeof uGuid !== "string") {
-          console.error("Error: uGuid is not provided.");
-          setInsightsLoading(false);
-          return;
-        }
-    
-        try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_BASE_URL}/api/get-agents/${uGuid}`
-          );
-    
-          if (response) {
-            setAgents(response.data);
-    
-            let totalMessages = 0;
-            for (const agent of response.data) {
-              if (agent.chat && Array.isArray(agent.chat)) {
-                totalMessages += agent.chat.length;
-              }
-            }
-            setTotalConversations(totalMessages);
-            
-            setWorkflowsCount(4);
+          const userGuid = userData.uGuid;
+          
+          // Check if it's first login (loggedBefore is false)
+          if (!userData.loggedBefore) {
+            await handleFirstLogin(userGuid);
           } else {
-            console.warn("Warning: Invalid response format. Expected an array of agents.");
+            // Fetch data anyway even if it's not first login
+            await fetchAgentsAndConversations(userGuid);
           }
-        } catch (error) {
-          console.error("Error fetching agents data:", error.message || error);
-        } finally {
-          setInsightsLoading(false);
+        } else {
+          console.error("No user data returned from checkSession");
+          toast.error("Failed to load user data");
         }
-      };
-
+      } catch (error) {
+        console.error("Error during initialization:", error);
+        toast.error("Something went wrong while loading your dashboard");
+      } finally {
+        setLoading(false);
+        setDataFetched(true);
+      }
     };
 
-    checkLoggedBefore();
-  }, []); // Empty dependency array ensures useEffect runs once
+    // Only run initialization if data hasn't been fetched yet
+    if (!dataFetched) {
+      initialize();
+    }
+  }, [dataFetched]); // Add dataFetched as dependency
+
+  // Handle first-time login
+  const handleFirstLogin = async (uGuid: string) => {
+    try {
+      // Agents data fetching and posting
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/update-logged-before`, {
+        uGuid,
+        loggedBefore: true,
+      },{withCredentials: true});
+
+      const [getAgent1, getAgent2] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-agent/${1}`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-agent/${2}`),
+      ]);
+
+      const agents = [getAgent1, getAgent2]
+        .map((response, index) => {
+          if (response.data?.item) {
+            return {
+              description: response.data.item.description,
+              instructions: response.data.item.instructions,
+              name: response.data.item.name,
+              avatar: response.data.item.avatar,
+              id: response.data.item.id,
+              chat: [],
+            };
+          } else {
+            console.error(
+              `Error: Agent ${index + 1} data or item is undefined`
+            );
+            return null;
+          }
+        })
+        .filter(Boolean);
+
+      await Promise.all(
+        agents.map(async (agent) => {
+          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-agent`, {
+            uGuid,
+            agent,
+          });
+          console.log(`Agent ${agent.name} posted successfully`);
+        })
+      );
+
+      // Workflows data fetching and posting
+      const workflow1 = 'en32bviety20nmfs8m';
+      const [getWorkflow1] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-workflow/${workflow1}`),
+      ]);
+
+      const workflows = [getWorkflow1]
+        .map((response, index) => {
+          if (response.data?.item) {
+            const workflowData =
+            typeof response.data.item.workflowData === "string"
+              ? JSON.parse(response.data.item.workflowData) // Parse if string
+              : response.data.item.workflowData; // Use as is if already an object
+
+            const steps =  
+            typeof response.data.item.steps === "string"
+            ? JSON.parse(response.data.item.steps) // Parse if string
+            : response.data.item.steps; // Use as is if already an object
+
+            return {
+              description: response.data.item.description,
+              name: response.data.item.name,
+              status: response.data.item.status,
+              steps,
+              workflowData
+            };
+          } else {
+            console.error(
+              `Error: Agent ${index + 1} data or item is undefined`
+            );
+            return null;
+          }
+        })
+        .filter(Boolean);
+
+      await Promise.all(
+        workflows.map(async (workflow) => {
+          console.log(workflow);
+          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-workflow`, {
+            uGuid,
+            workflow,
+          });
+          console.log(`Workflow ${workflow.name} posted successfully`);
+        })
+      );
+
+      updateLoggedBefore(true);
+      
+      // Fetch the data after posting
+      await fetchAgentsAndConversations(uGuid);
+      
+    } catch (err) {
+      console.error("Error in first login setup:", err);
+      toast.error("Error setting up your account");
+    }
+  };
+
+  const fetchAgentsAndConversations = async (uGuid: string) => {
+    setInsightsLoading(true);
+    if (!uGuid || typeof uGuid !== "string") {
+      console.error("Error: uGuid is not provided.");
+      setInsightsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/get-agents/${uGuid}`
+      );
+
+      if (response) {
+        setAgents(response.data);
+
+        let totalMessages = 0;
+        for (const agent of response.data) {
+          if (agent.chat && Array.isArray(agent.chat)) {
+            totalMessages += agent.chat.length;
+          }
+        }
+        setTotalConversations(totalMessages);
+        
+        // Get workflow count
+        try {
+          const workflowsResponse = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/api/get-workflows/${uGuid}`
+          );
+          if (workflowsResponse && Array.isArray(workflowsResponse.data)) {
+            setWorkflowsCount(workflowsResponse.data.length);
+          } else {
+            setWorkflowsCount(4); // Fallback to default
+          }
+        } catch (error) {
+          console.error("Error fetching workflows count:", error);
+          setWorkflowsCount(4); // Fallback on error
+        }
+      } else {
+        console.warn("Warning: Invalid response format. Expected an array of agents.");
+      }
+    } catch (error) {
+      console.error("Error fetching agents data:", error.message || error);
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
 
   const handleAgentSelected = (agentId: string) => {
     localStorage.setItem('lastSelectedAgentId', agentId);
