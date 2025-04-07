@@ -18,7 +18,11 @@ type Workflow = {
   description: string;
   status: "active" | "draft" | "archived";
   lastRun?: string;
-  steps: Array<any>;
+  steps: Array<{
+    id: string;
+    name: string;
+    type?: string;
+  }>;
   workflowData?: any; // For API response format
 };
 
@@ -44,6 +48,7 @@ type InputField = {
   id: string;
   name: string;
   value: string;
+  type?: string;
 };
 
 const WorkflowDetail = () => {
@@ -55,11 +60,7 @@ const WorkflowDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
-  const [inputs, setInputs] = useState<InputField[]>([
-    { id: "67f1cbe75cdf0944c9b89615", name: "Customer Email", value: "" },
-    { id: "2", name: "Welcome Message", value: "" },
-    { id: "3", name: "Priority Level", value: "" },
-  ]);
+  const [inputs, setInputs] = useState<InputField[]>([]);
 
   const allInputsValid = inputs.every(input => input.value.trim().length > 0);
 
@@ -69,6 +70,25 @@ const WorkflowDetail = () => {
     
     if (workflowFromState) {
       setWorkflow(workflowFromState);
+      
+      // Initialize inputs based on workflow steps
+      if (Array.isArray(workflowFromState.steps) && workflowFromState.steps.length > 0) {
+        const initialInputs = workflowFromState.steps.map(step => ({
+          id: step.id || Math.random().toString(36).substr(2, 9),
+          name: step.name || "Untitled Input",
+          value: "",
+          type: step.type || "text"
+        }));
+        setInputs(initialInputs);
+      } else {
+        // Default inputs if no steps are defined
+        setInputs([
+          { id: "default1", name: "Customer Email", value: "", type: "text" },
+          { id: "default2", name: "Welcome Message", value: "", type: "textarea" },
+          { id: "default3", name: "Priority Level", value: "", type: "text" }
+        ]);
+      }
+      
       setWorkflowRuns(mockWorkflowRuns);
       setLoading(false);
     } else if (id) {
@@ -82,9 +102,23 @@ const WorkflowDetail = () => {
           name: "Workflow " + id,
           description: "This is a workflow description",
           status: "active" as const,
-          steps: []
+          steps: [
+            { id: "step1", name: "Customer Email", type: "text" },
+            { id: "step2", name: "Welcome Message", type: "textarea" },
+            { id: "step3", name: "Priority Level", type: "text" }
+          ]
         };
         setWorkflow(mockWorkflow);
+        
+        // Initialize inputs based on workflow steps
+        const initialInputs = mockWorkflow.steps.map(step => ({
+          id: step.id,
+          name: step.name,
+          value: "",
+          type: step.type
+        }));
+        setInputs(initialInputs);
+        
         setWorkflowRuns(mockWorkflowRuns);
         setLoading(false);
       }, 800);
@@ -264,7 +298,7 @@ const WorkflowDetail = () => {
                             </div>
                           </div>
                           
-                          {input.name === "Welcome Message" ? (
+                          {input.type === "textarea" ? (
                             <Textarea
                               id={`input-${input.id}`}
                               value={input.value}

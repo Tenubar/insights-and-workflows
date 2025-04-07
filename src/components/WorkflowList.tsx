@@ -19,7 +19,11 @@ type Workflow = {
   description: string;
   status: "active" | "draft" | "archived";
   lastRun?: string;
-  steps: Array<any>;
+  steps: Array<{
+    id: string;
+    name: string;
+    type?: string;
+  }>;
 };
 
 
@@ -45,16 +49,16 @@ const WorkflowList = () => {
   const [error, setError] = useState<string | null>(null);
   const { user, setUser } = useAuth();
   
-    useEffect(() => {
-      const fetchUserDetails = async () => {
-        const userData = await checkSession();
-        if (userData) {
-          setUser(userData);
-        }
-      };
-  
-      fetchUserDetails();
-    }, []);
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const userData = await checkSession();
+      if (userData) {
+        setUser(userData);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
 
   useEffect(() => {
     const fetchWorkflows = async () => {
@@ -70,8 +74,28 @@ const WorkflowList = () => {
         }
         const data = await response.json();
         console.log(data);
-        setWorkflows(data);
-
+        
+        // Transform the data to ensure each workflow has properly structured steps
+        const processedData = data.map((workflow: any) => {
+          // Ensure steps is always an array with proper structure
+          let processedSteps = Array.isArray(workflow.steps) ? workflow.steps : [];
+          
+          // If it's empty, add some default steps
+          if (processedSteps.length === 0) {
+            processedSteps = [
+              { id: "step1", name: "Customer Email", type: "text" },
+              { id: "step2", name: "Welcome Message", type: "textarea" },
+              { id: "step3", name: "Priority Level", type: "text" }
+            ];
+          }
+          
+          return {
+            ...workflow,
+            steps: processedSteps
+          };
+        });
+        
+        setWorkflows(processedData);
       } catch (err) {
         setError("Failed to load workflows. Please try again later.");
       } finally {
