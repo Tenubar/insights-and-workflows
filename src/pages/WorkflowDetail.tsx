@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Play, History, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,6 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useLocation } from "react-router-dom";
-
 
 // Define the workflow type
 type Workflow = {
@@ -20,6 +18,7 @@ type Workflow = {
   status: "active" | "draft" | "archived";
   lastRun?: string;
   steps: number;
+  workflowData?: any; // For API response format
 };
 
 // Define a workflow run type
@@ -29,28 +28,6 @@ type WorkflowRun = {
   status: "success" | "failed" | "running";
   duration: string;
 };
-
-const WorkflowPage = () => {
-  const location = useLocation();
-  const { workflowInfo } = location.state || {};
-}
-
-// Mock workflows data (to be replaced with actual data fetching)
-// const workflows: Workflow[] = [
-//   {
-//     id: "1",
-//     name: "Customer Onboarding",
-//     description: "Automate customer welcome and setup process",
-//     status: "active",
-//     lastRun: "2 hours ago",
-//     steps: 5,
-//   },
-// ];
-
-const workflows: Workflow[] = [
-  
-];
-
 
 // Mock workflow runs
 const mockWorkflowRuns: WorkflowRun[] = [
@@ -65,41 +42,53 @@ const mockWorkflowRuns: WorkflowRun[] = [
 type InputField = {
   id: string;
   name: string;
-  // enabled: boolean;
   value: string;
 };
 
 const WorkflowDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
   const [inputs, setInputs] = useState<InputField[]>([
-
-    // Database here
     { id: "67f1cbe75cdf0944c9b89615", name: "Customer Email", value: "" },
     { id: "2", name: "Welcome Message", value: "" },
     { id: "3", name: "Priority Level", value: "" },
-    
   ]);
 
   const allInputsValid = inputs.every(input => input.value.trim().length > 0);
 
   useEffect(() => {
-    // Simulate loading data
-    setLoading(true);
-    setTimeout(() => {
-      const foundWorkflow = workflows.find(w => w.id === id);
-      if (foundWorkflow) {
-        setWorkflow(foundWorkflow);
-      }
+    // Get workflow data from the router state
+    const workflowFromState = location.state?.workflow;
+    
+    if (workflowFromState) {
+      setWorkflow(workflowFromState);
       setWorkflowRuns(mockWorkflowRuns);
       setLoading(false);
-    }, 800);
-  }, [id]);
+    } else if (id) {
+      // Fallback: fetch workflow by ID if not available in state
+      // This would be an API call in a real application
+      setLoading(true);
+      setTimeout(() => {
+        // Mock data for demonstration
+        const mockWorkflow = {
+          id: id,
+          name: "Workflow " + id,
+          description: "This is a workflow description",
+          status: "active" as const,
+          steps: 5
+        };
+        setWorkflow(mockWorkflow);
+        setWorkflowRuns(mockWorkflowRuns);
+        setLoading(false);
+      }, 800);
+    }
+  }, [id, location.state]);
 
   const handleInputChange = (inputId: string, value: string) => {
     setInputs(prev => 
@@ -115,13 +104,10 @@ const WorkflowDetail = () => {
       return;
     }
   
-
-const inputValues = inputs.map(input => ({ name: input.name, value: input.value }));
-
-console.log("Running workflow with inputs:", inputValues);
-toast.success("Workflow started successfully!");
-};
-
+    const inputValues = inputs.map(input => ({ name: input.name, value: input.value }));
+    console.log("Running workflow with inputs:", inputValues);
+    toast.success("Workflow started successfully!");
+  };
 
   const toggleHistory = () => {
     setShowHistory(!showHistory);
@@ -233,7 +219,9 @@ toast.success("Workflow started successfully!");
                   className="space-y-8"
                 >
                   <motion.div variants={itemVariants} className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold tracking-tight mb-2">{workflow.name}</h1>
+                    <h1 className="text-3xl font-bold tracking-tight mb-2">
+                      {workflow.workflowData?.workflow_name?.S || workflow.name}
+                    </h1>
                     <Button 
                       variant="outline" 
                       onClick={toggleHistory}
@@ -245,7 +233,7 @@ toast.success("Workflow started successfully!");
                   </motion.div>
                   
                   <motion.div variants={itemVariants} className="text-gray-500 dark:text-gray-400 -mt-6">
-                    {workflow.description}
+                    {workflow.workflowData?.description?.S || workflow.description}
                   </motion.div>
                   
                   <motion.div 
@@ -260,8 +248,7 @@ toast.success("Workflow started successfully!");
                           <div className="flex items-center justify-between">
                             <Label 
                               htmlFor={`input-${input.id}`}
-                              // className={!input.enabled ? "text-gray-400 dark:text-gray-500" : ""}
-                               className="flex items-center"
+                              className="flex items-center"
                             >
                               {input.name}
                             </Label>
@@ -281,7 +268,6 @@ toast.success("Workflow started successfully!");
                               id={`input-${input.id}`}
                               value={input.value}
                               onChange={(e) => handleInputChange(input.id, e.target.value)}
-                              // disabled={!input.enabled}
                               placeholder={`Enter ${input.name.toLowerCase()}...`}
                               className="w-full"
                               required
@@ -291,7 +277,6 @@ toast.success("Workflow started successfully!");
                               id={`input-${input.id}`}
                               value={input.value}
                               onChange={(e) => handleInputChange(input.id, e.target.value)}
-                              // disabled={!input.enabled}
                               placeholder={`Enter ${input.name.toLowerCase()}...`}
                               className="w-full"
                               required
@@ -307,6 +292,7 @@ toast.success("Workflow started successfully!");
                       size="lg" 
                       onClick={handleRunWorkflow}
                       className="px-8"
+                      disabled={!allInputsValid}
                     >
                       <Play size={18} className="mr-2" />
                       Run Workflow
@@ -341,7 +327,7 @@ toast.success("Workflow started successfully!");
                   transition={{ delay: 0.2 }}
                 >
                   <h1 className="text-3xl font-bold tracking-tight mb-6">
-                    {workflow.name} History
+                    {workflow.workflowData?.workflow_name?.S || workflow.name} History
                   </h1>
                   
                   <div className="space-y-4">
