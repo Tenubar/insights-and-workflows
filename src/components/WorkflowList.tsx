@@ -1,3 +1,4 @@
+
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, GitBranchPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +12,13 @@ import {
 import { checkSession } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
+import { useState } from "react";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink 
+} from "@/components/ui/pagination";
 
 type Workflow = {
   id: string;
@@ -128,6 +136,10 @@ const WorkflowList = () => {
   //   navigate(`/workflow/${workflowId}`, { state: { workflow } }); // Pass workflow data as state
   // };
   
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
