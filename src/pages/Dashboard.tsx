@@ -56,6 +56,9 @@ const Dashboard = () => {
     
       if (!loggedBefore && uGuid) {
         try {
+
+          // Agents data fetching and posting
+
           await axios.post(`${import.meta.env.VITE_API_BASE_URL}/update-logged-before`, {
             uGuid,
             loggedBefore: true,
@@ -95,6 +98,48 @@ const Dashboard = () => {
               console.log(`Agent ${agent.name} posted successfully`);
             })
           );
+
+          // Workflows data fetching and posting
+          const workflow1 = 'en32bviety20nmfs8m';
+          const [getWorkflow1] = await Promise.all([
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/get-workflow/${workflow1}`),
+          ]);
+
+          const workflows = [getWorkflow1]
+            .map((response, index) => {
+              if (response.data?.item) {
+                const workflowData =
+                typeof response.data.item.workflowData === "string"
+                  ? JSON.parse(response.data.item.workflowData) // Parse if string
+                  : response.data.item.workflowData; // Use as is if already an object
+
+                return {
+                  description: response.data.item.description,
+                  name: response.data.item.name,
+                  status: response.data.item.status,
+                  steps: response.data.item.steps,
+                  workflowData
+                };
+              } else {
+                console.error(
+                  `Error: Agent ${index + 1} data or item is undefined`
+                );
+                return null;
+              }
+            })
+            .filter(Boolean);
+
+            await Promise.all(
+              workflows.map(async (workflow) => {
+                console.log(workflow);
+                await axios.post(`${import.meta.env.VITE_API_BASE_URL}/post-workflow`, {
+                  uGuid,
+                  workflow,
+                });
+                console.log(`Workflow ${workflow.name} posted successfully`);
+              })
+            );
+
         } catch (err) {
           console.error("Error updating loggedBefore:", err);
         } finally {

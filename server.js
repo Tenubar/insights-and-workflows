@@ -232,7 +232,7 @@ app.post("/register", async (req, res) => {
           createdAt: { S: new Date().toISOString() }, // Save creation time
           trainingInfo: { L: [] }, // Initialize as an empty list
           workflowCount: { N: "0" }, // Number data type for workflow count
-          workflowRunId: { L: [] }, // Empty list for workflow run IDs
+          workflows: { L: [] }, // Empty list for workflow run IDs
           socketId: { S: "" }, // Initialize as an empty string
           agentCount: { N: "0" }, // Number data type for agent count
           agents: { L: [] }, // Initialize as an empty list
@@ -660,10 +660,6 @@ app.post('/api/chat/:uGuid/:agentID', async (req, res) => {
   }
 });
 
-
-
-
-
 // Update Logged Before
 app.post("/update-logged-before", async (req, res) => {
     const { uGuid, loggedBefore } = req.body; // Extracting the body data
@@ -713,7 +709,145 @@ app.post("/update-logged-before", async (req, res) => {
     } catch (err) {
       console.error("Error updating loggedBefore:", err);
       res.status(500).send("Error updating loggedBefore");
+  }
+});
+
+
+// Workflows
+
+// Get workflow by ID
+app.get("/get-workflow/:id", async (req, res) => {
+    const { id } = req.params; // Extract ID from the request parameters
+  
+    // Define the parameters for the GetItem command
+    const params = {
+      TableName: "project_workflows",
+      Key: { id: { S: id } }, 
+    };
+  
+    try {
+      // Send the GetItemCommand to DynamoDB
+      const command = new GetItemCommand(params);
+      const response = await client.send(command);
+  
+      // Check if an item was returned
+      if (!response.Item) {
+        return res.status(404).send("Item not found");
+      }
+  
+      // Return the item
+      res.status(200).json({
+        message: "Item retrieved successfully",
+        item: response.Item,
+      });
+    } catch (error) {
+      console.error("Error retrieving item:", error);
+      res.status(500).send("Error retrieving item");
     }
-  });
+});
+
+// Get All Workflows
+app.get("/api/get-workflows/:uGuid", async (req, res) => {
+  const { uGuid } = req.params;
+
+  if (!uGuid) {
+    return res.status(400).json({ error: "uGuid is required" });
+  }
+
+  try {
+    // Construct DynamoDB parameters
+    const params = {
+      TableName: "project_users", // Your DynamoDB table name
+      Key: {
+        uGuid: { S: uGuid }, // Key structure
+      },
+      ProjectionExpression: "workflows", // Specify the 'workflows' attribute
+    };
+
+    // Execute the GetItemCommand
+    const command = new GetItemCommand(params);
+    const result = await client.send(command);
+
+    // Parse and format the workflows list
+    const workflows = result.Item?.workflows?.L.map((workflow) => ({
+      status: workflow.M.status.S,
+      name: workflow.M.name.S,
+      description: workflow.M.description.S,
+      steps: workflow.M.steps.S,
+      workflowData: workflow.M.workflowData.M
+    })) || [];
+    
+
+    // Respond with the list of agents
+    res.status(200).json(workflows);
+  } catch (err) {
+    console.error("Error fetching agents:", err);
+    res.status(500).json({ error: "Failed to fetch agents" });
+  }
+});
+
+// Post Workflow by ID
+app.post("/post-workflow", async (req, res) => {
+  const { uGuid, workflow } = req.body;
+
+  // Validate input
+  if (!uGuid || !workflow) {
+      return res.status(400).send("uGuid and agent are required.");
+  }
+
+  try {
+      // Construct the DynamoDB parameters
+      const params = {
+          TableName: "project_users", // DynamoDB table name
+          Key: { uGuid: { S: uGuid } }, // Key structure
+          UpdateExpression: "SET workflows = list_append(if_not_exists(workflows, :emptyList), :workflows)",
+          ExpressionAttributeValues: {
+              ":emptyList": { L: [] }, // Initialize as an empty list if undefined
+              ":workflows": {
+                    L: [
+                        {
+                            M: {
+                                description: workflow.description,
+                                name: workflow.name,
+                                status: workflow.status,
+                                steps: workflow.steps,
+                                workflowData: workflow.workflowData, // Use parsed object
+                                workflowRunData: { L: [] }, // Initialize empty list
+                            },
+                        },
+                    ],
+                },
+            },
+        };
+
+
+      // Execute the DynamoDB UpdateItem command
+      const command = new UpdateItemCommand(params);
+      await client.send(command);
+
+      // Construct the DynamoDB parameters for incrementing agentCount
+      const incrementWorkflowCountParams = {
+        TableName: "project_users", // DynamoDB table name
+        Key: { uGuid: { S: uGuid } }, // Key structure
+        UpdateExpression: "SET workflowCount = if_not_exists(workflowCount, :start) + :increment",
+        ExpressionAttributeValues: {
+            ":start": { N: "0" }, // Initialize workflowCount to 0 if undefined
+            ":increment": { N: "1" }, // Increment by 1
+          },
+      };
+
+      // Execute the DynamoDB UpdateItem command to increment agentCount
+      const incrementWorkflowCountCommand = new UpdateItemCommand(incrementWorkflowCountParams);
+      await client.send(incrementWorkflowCountCommand);
+
+
+      // Respond with success
+      res.status(200).send("Workflow added and workflowCount incremented successfully!");
+  } catch (err) {
+      console.error("Error adding workflow:", err);
+      res.status(500).send("Error adding workflow");
+  }
+});
+
 
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));

@@ -1,6 +1,16 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, GitBranchPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink 
+} from "@/components/ui/pagination";
+import { checkSession } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+
 
 type Workflow = {
   id: string;
@@ -11,46 +21,69 @@ type Workflow = {
   steps: number;
 };
 
+
 const workflows: Workflow[] = [
-  {
-    id: "1",
-    name: "Customer Onboarding",
-    description: "Automate customer welcome and setup process",
-    status: "active",
-    steps: 5,
-  },
-  {
-    id: "2",
-    name: "Data Analysis Pipeline",
-    description: "Process and analyze customer data for insights",
-    status: "active",
-    steps: 8,
-  },
-  {
-    id: "3",
-    name: "Email Campaign Manager",
-    description: "Create and schedule email marketing campaigns",
-    status: "draft",
-    steps: 4,
-  },
-  {
-    id: "4",
-    name: "Support Ticket Triage",
-    description: "Automatically categorize and assign support tickets",
-    status: "active",
-    steps: 3,
-  },
-  {
-    id: "5",
-    name: "Support Ticket Triage",
-    description: "Automatically categorize and assign support tickets",
-    status: "active",
-    steps: 3,
-  },
+
+  // {
+  //   id: "1",
+  //   name: "Customer Onboarding",
+  //   description: "Automate customer welcome and setup process",
+  //   status: "active",
+  //   steps: 5,
+  // },
+
 ];
+
+const ITEMS_PER_PAGE = 5;
 
 const WorkflowList = () => {
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const { user, setUser } = useAuth();
+  
+    useEffect(() => {
+      const fetchUserDetails = async () => {
+        const userData = await checkSession();
+        if (userData) {
+          setUser(userData);
+        }
+      };
+  
+      fetchUserDetails();
+    }, []);
+
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        if(!user) {
+          setError("User not authenticated. Please log in.");
+          return;
+        }
+        const uGuid = user.uGuid;
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/get-workflows/${uGuid}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch workflows");
+        }
+        const data = await response.json();
+        setWorkflows(data);
+
+      } catch (err) {
+        setError("Failed to load workflows. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkflows();
+  }, []);
+
+  const totalPages = Math.ceil(workflows.length / ITEMS_PER_PAGE);
+  const hasMoreThanOnePage = workflows.length > ITEMS_PER_PAGE;
+  
+  const displayedWorkflows = workflows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   
   const container = {
     hidden: { opacity: 0 },
@@ -68,7 +101,36 @@ const WorkflowList = () => {
   };
 
   const handleWorkflowClick = (id: string) => {
-    navigate(`/workflow/${id}`);
+    workflows.map((workflow: any, index: number) => {
+      const workflowInfo = workflows;
+      const workflowId = workflow.workflowData.workflow_id.S;
+      navigate(`/workflow/${workflowId}`, { state: { workflowInfo } });
+    });
+  };
+  
+  // const handleWorkflowClick = (id: string) => {
+  //   const selectedWorkflow = workflows.map((workflow: any, index: number) => {workflow.workflowData.workflow_id.S;});
+  //     const workflowInfo = workflows;
+  //     navigate(`/workflow/${selectedWorkflow}`);
+  // };
+  
+  // const handleWorkflowClick = (id: string) => {
+  //   const selectedWorkflow = workflows.find((workflow: any) => workflow.workflowData.workflow_id.S === id);
+  //   if (!selectedWorkflow) return; // Handle case where workflow is not found
+
+  //   const workflowInfo = workflows;
+  //   navigate(`/workflow/${id}`, { state: { workflowInfo: workflowInfo } });
+  // }
+
+
+  // const handleWorkflowClick = (workflow) => {
+  //   const workflowId = workflow.workflowData.workflow_id; // Extract workflow_id
+  //   navigate(`/workflow/${workflowId}`, { state: { workflow } }); // Pass workflow data as state
+  // };
+  
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -87,7 +149,7 @@ const WorkflowList = () => {
         animate="show"
         className="space-y-4"
       >
-        {workflows.map((workflow) => (
+        {displayedWorkflows.map((workflow) => (
           <motion.div
             key={workflow.id}
             variants={item}
@@ -135,6 +197,26 @@ const WorkflowList = () => {
           </motion.div>
         ))}
       </motion.div>
+
+      {hasMoreThanOnePage && (
+        <div className="mt-6">
+          <Pagination className="mt-4">
+            <PaginationContent>
+              {Array.from({ length: totalPages }).map((_, index) => (
+                <PaginationItem key={index}>
+                  <PaginationLink 
+                    isActive={currentPage === index + 1}
+                    onClick={() => handlePageChange(index + 1)}
+                    className="cursor-pointer transition-all hover:bg-primary/10 active:bg-primary/20 active:scale-95"
+                  >
+                    {index + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };
