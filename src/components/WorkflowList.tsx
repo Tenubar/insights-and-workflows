@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, GitBranchPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +10,8 @@ import {
 } from "@/components/ui/pagination";
 import { checkSession } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-
+import axios from 'axios';
+import { toast } from "@/components/ui/sonner";
 
 type Workflow = {
   id: string;
@@ -26,19 +26,6 @@ type Workflow = {
   }>;
 };
 
-
-const workflows: Workflow[] = [
-
-  // {
-  //   id: "1",
-  //   name: "Customer Onboarding",
-  //   description: "Automate customer welcome and setup process",
-  //   status: "active",
-  //   steps: 5,
-  // },
-
-];
-
 const ITEMS_PER_PAGE = 5;
 
 const WorkflowList = () => {
@@ -50,68 +37,74 @@ const WorkflowList = () => {
   const { user, setUser } = useAuth();
   
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      const userData = await checkSession();
-      if (userData) {
-        setUser(userData);
-      }
-    };
-
-    fetchUserDetails();
-  }, []);
-
-  useEffect(() => {
-    const fetchWorkflows = async () => {
+    const fetchData = async () => {
+      setLoading(true);
+      
       try {
-        if(!user) {
-          setError("User not authenticated. Please log in.");
-          return;
-        }
-        const uGuid = user.uGuid;
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/get-workflows/${uGuid}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch workflows");
-        }
-        const data = await response.json();
-        console.log(data);
-        
-        const processedData = data.map((workflow) => {
-          // Extract steps and ensure proper structure
-          let steps = [];
-          if (workflow.steps && typeof workflow.steps === "object") {
-            steps = Object.entries(workflow.steps).map(([key, value]) => ({
-              id: key.toLowerCase().replace(/\s+/g, "_"), // Generate an ID based on the key
-              name: key, // Use the key as the name of the step
-              type: typeof value === "object" && (value as { S?: string }).S === "" ? "text" : "unknown", // Default type 'text' if S is empty
-              value: (value as { S?: string })?.S || "", // Safely cast value to the expected type
-            }));
+        // Get current user data if not available
+        let userData = user;
+        if (!userData || !userData.uGuid) {
+          userData = await checkSession();
+          if (userData) {
+            setUser(userData);
+          } else {
+            throw new Error("User not authenticated");
           }
+        }
         
-          // If steps is empty, add some default steps
-          if (steps.length === 0) {
-            steps = [
-              // { id: "default_step1", name: "Default Step 1", type: "text", value: "" },
-              // { id: "default_step2", name: "Default Step 2", type: "textarea", value: "" },
-            ];
-          }
-        
-          return {
-            ...workflow,
-            steps,
-          };
-        });
-        
-        
-        setWorkflows(processedData);
+        // Now fetch workflows with the user GUID
+        await fetchWorkflows(userData.uGuid);
       } catch (err) {
+        console.error("Error initializing workflow list:", err);
         setError("Failed to load workflows. Please try again later.");
+        toast.error("Failed to load workflows");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchWorkflows();
+    
+    fetchData();
   }, []);
+
+  const fetchWorkflows = async (uGuid: string) => {
+    try {
+      if(!uGuid) {
+        setError("User not authenticated. Please log in.");
+        return;
+      }
+      
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/get-workflows/${uGuid}`);
+      if (!response.data) {
+        throw new Error("Failed to fetch workflows");
+      }
+      
+      // Transform the data to ensure each workflow has properly structured steps
+      const processedData = response.data.map((workflow: any) => {
+        // Ensure steps is always an array with proper structure
+        let processedSteps = Array.isArray(workflow.steps) ? workflow.steps : [];
+        
+        // If it's empty, add some default steps
+        if (processedSteps.length === 0) {
+          processedSteps = [
+            { id: "step1", name: "Customer Email", type: "text" },
+            { id: "step2", name: "Welcome Message", type: "textarea" },
+            { id: "step3", name: "Priority Level", type: "text" }
+          ];
+        }
+        
+        return {
+          ...workflow,
+          steps: processedSteps
+        };
+      });
+      
+      setWorkflows(processedData);
+    } catch (err) {
+      console.error("Error fetching workflows:", err);
+      setError("Failed to load workflows. Please try again later.");
+      throw err; // rethrow to be handled by the caller
+    }
+  };
 
   const totalPages = Math.ceil(workflows.length / ITEMS_PER_PAGE);
   const hasMoreThanOnePage = workflows.length > ITEMS_PER_PAGE;
