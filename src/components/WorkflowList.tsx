@@ -1,3 +1,4 @@
+
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, GitBranchPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -100,11 +101,11 @@ const WorkflowList = () => {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
   };
-  
+
   const handleWorkflowClick = (workflow: any) => {
+    // Extract the workflow ID from the workflow object
     const workflowId = workflow.workflowData?.workflow_id?.S || workflow.id;
     
-    console.log(workflow);
     // Navigate to the workflow detail page with the workflow data
     navigate(`/workflow/${workflowId}`, { 
       state: { workflow: workflow }

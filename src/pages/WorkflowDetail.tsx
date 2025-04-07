@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-
 // Define the workflow type
 type Workflow = {
   id: string;
@@ -18,8 +17,8 @@ type Workflow = {
   description: string;
   status: "active" | "draft" | "archived";
   lastRun?: string;
-  steps: Array<any>;
-  workflowData?: any;
+  steps: number;
+  workflowData?: any; // For API response format
 };
 
 // Define a workflow run type
@@ -39,28 +38,6 @@ type WorkflowRun = {
   duration: string;
 };
 
-// const WorkflowPage = () => {
-//   const location = useLocation();
-//   const { workflowInfo } = location.state || {};
-// }
-
-// Mock workflows data (to be replaced with actual data fetching)
-// const workflows: Workflow[] = [
-//   {
-//     id: "1",
-//     name: "Customer Onboarding",
-//     description: "Automate customer welcome and setup process",
-//     status: "active",
-//     lastRun: "2 hours ago",
-//     steps: 5,
-//   },
-// ];
-
-const workflows: Workflow[] = [
-  
-];
-
-
 // Mock workflow runs
 const mockWorkflowRuns: WorkflowRun[] = [
   { id: "run1", date: "2025-04-04 14:30", status: "success", duration: "45s" },
@@ -74,23 +51,20 @@ const mockWorkflowRuns: WorkflowRun[] = [
 type InputField = {
   id: string;
   name: string;
-  // enabled: boolean;
   value: string;
 };
 
 const WorkflowDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const location = useLocation();
+  const { user } = useAuth();
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
   const [inputs, setInputs] = useState<InputField[]>([
-
-    // Database here
-    { id: "1", name: "Customer Email", value: "" },
+    { id: "67f1cbe75cdf0944c9b89615", name: "Customer Email", value: "" },
     { id: "2", name: "Welcome Message", value: "" },
     { id: "3", name: "Priority Level", value: "" },
   ]);
@@ -116,7 +90,7 @@ const WorkflowDetail = () => {
           name: "Workflow " + id,
           description: "This is a workflow description",
           status: "active" as const,
-          steps: [] // Updated to an empty array to match the Workflow type
+          steps: 5
         };
         setWorkflow(mockWorkflow);
         setWorkflowRuns(mockWorkflowRuns);
@@ -139,17 +113,10 @@ const WorkflowDetail = () => {
       return;
     }
   
-
-// const inputValues = inputs.map(input => ({ name: input.name, value: input.value }));
-// console.log("Running workflow with inputs:", inputValues);
-// toast.success("Workflow started successfully!");
-// };
-
-const inputValues = inputs.map(input => ({ name: input.name, value: input.value }));
-console.log("Running workflow with inputs:", inputValues);
-toast.success("Workflow started successfully!");
-};
-
+    const inputValues = inputs.map(input => ({ name: input.name, value: input.value }));
+    console.log("Running workflow with inputs:", inputValues);
+    toast.success("Workflow started successfully!");
+  };
 
   const toggleHistory = () => {
     setShowHistory(!showHistory);
@@ -262,7 +229,7 @@ toast.success("Workflow started successfully!");
                 >
                   <motion.div variants={itemVariants} className="flex justify-between items-center">
                     <h1 className="text-3xl font-bold tracking-tight mb-2">
-                    {workflow.workflowData?.workflow_name?.S || workflow.name}
+                      {workflow.workflowData?.workflow_name?.S || workflow.name}
                     </h1>
                     <Button 
                       variant="outline" 
@@ -275,7 +242,7 @@ toast.success("Workflow started successfully!");
                   </motion.div>
                   
                   <motion.div variants={itemVariants} className="text-gray-500 dark:text-gray-400 -mt-6">
-                  {workflow.workflowData?.description?.S || workflow.description}
+                    {workflow.workflowData?.description?.S || workflow.description}
                   </motion.div>
                   
                   <motion.div 
@@ -290,8 +257,7 @@ toast.success("Workflow started successfully!");
                           <div className="flex items-center justify-between">
                             <Label 
                               htmlFor={`input-${input.id}`}
-                              // className={!input.enabled ? "text-gray-400 dark:text-gray-500" : ""}
-                               className="flex items-center"
+                              className="flex items-center"
                             >
                               {input.name}
                             </Label>
@@ -311,7 +277,6 @@ toast.success("Workflow started successfully!");
                               id={`input-${input.id}`}
                               value={input.value}
                               onChange={(e) => handleInputChange(input.id, e.target.value)}
-                              // disabled={!input.enabled}
                               placeholder={`Enter ${input.name.toLowerCase()}...`}
                               className="w-full"
                               required
@@ -321,7 +286,6 @@ toast.success("Workflow started successfully!");
                               id={`input-${input.id}`}
                               value={input.value}
                               onChange={(e) => handleInputChange(input.id, e.target.value)}
-                              // disabled={!input.enabled}
                               placeholder={`Enter ${input.name.toLowerCase()}...`}
                               className="w-full"
                               required
@@ -372,7 +336,7 @@ toast.success("Workflow started successfully!");
                   transition={{ delay: 0.2 }}
                 >
                   <h1 className="text-3xl font-bold tracking-tight mb-6">
-                  {workflow.workflowData?.workflow_name?.S || workflow.name} History
+                    {workflow.workflowData?.workflow_name?.S || workflow.name} History
                   </h1>
                   
                   <div className="space-y-4">
