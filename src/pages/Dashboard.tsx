@@ -113,11 +113,16 @@ const Dashboard = () => {
                   ? JSON.parse(response.data.item.workflowData) // Parse if string
                   : response.data.item.workflowData; // Use as is if already an object
 
+                const steps =  
+                typeof response.data.item.steps === "string"
+                ? JSON.parse(response.data.item.steps) // Parse if string
+                : response.data.item.steps; // Use as is if already an object
+
                 return {
                   description: response.data.item.description,
                   name: response.data.item.name,
                   status: response.data.item.status,
-                  steps: response.data.item.steps,
+                  steps,
                   workflowData
                 };
               } else {

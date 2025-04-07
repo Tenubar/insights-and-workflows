@@ -773,7 +773,7 @@ app.get("/api/get-workflows/:uGuid", async (req, res) => {
       status: workflow.M.status.S,
       name: workflow.M.name.S,
       description: workflow.M.description.S,
-      steps: workflow.M.steps.S,
+      steps: workflow.M.steps.M,
       workflowData: workflow.M.workflowData.M
     })) || [];
     

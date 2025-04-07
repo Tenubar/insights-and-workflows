@@ -18,7 +18,7 @@ type Workflow = {
   description: string;
   status: "active" | "draft" | "archived";
   lastRun?: string;
-  steps: number;
+  steps: Array<any>;
 };
 
 
@@ -68,6 +68,7 @@ const WorkflowList = () => {
           throw new Error("Failed to fetch workflows");
         }
         const data = await response.json();
+        console.log(data);
         setWorkflows(data);
 
       } catch (err) {
@@ -99,36 +100,17 @@ const WorkflowList = () => {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
   };
-
-  const handleWorkflowClick = (id: string) => {
-    workflows.map((workflow: any, index: number) => {
-      const workflowInfo = workflows;
-      const workflowId = workflow.workflowData.workflow_id.S;
-      navigate(`/workflow/${workflowId}`, { state: { workflowInfo } });
+  
+  const handleWorkflowClick = (workflow: any) => {
+    const workflowId = workflow.workflowData?.workflow_id?.S || workflow.id;
+    
+    console.log(workflow);
+    // Navigate to the workflow detail page with the workflow data
+    navigate(`/workflow/${workflowId}`, { 
+      state: { workflow: workflow }
     });
   };
   
-  // const handleWorkflowClick = (id: string) => {
-  //   const selectedWorkflow = workflows.map((workflow: any, index: number) => {workflow.workflowData.workflow_id.S;});
-  //     const workflowInfo = workflows;
-  //     navigate(`/workflow/${selectedWorkflow}`);
-  // };
-  
-  // const handleWorkflowClick = (id: string) => {
-  //   const selectedWorkflow = workflows.find((workflow: any) => workflow.workflowData.workflow_id.S === id);
-  //   if (!selectedWorkflow) return; // Handle case where workflow is not found
-
-  //   const workflowInfo = workflows;
-  //   navigate(`/workflow/${id}`, { state: { workflowInfo: workflowInfo } });
-  // }
-
-
-  // const handleWorkflowClick = (workflow) => {
-  //   const workflowId = workflow.workflowData.workflow_id; // Extract workflow_id
-  //   navigate(`/workflow/${workflowId}`, { state: { workflow } }); // Pass workflow data as state
-  // };
-  
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -155,7 +137,7 @@ const WorkflowList = () => {
             variants={item}
             whileHover={{ x: 4 }}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center cursor-pointer transition-all hover:shadow-sm"
-            onClick={() => handleWorkflowClick(workflow.id)}
+            onClick={() => handleWorkflowClick(workflow)}
           >
             <div>
               <div className="flex items-center">
