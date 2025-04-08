@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/pagination";
 import { checkSession } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { toast } from "@/components/ui/sonner";
+import axios from "axios";
 
 type Workflow = {
   id: string;
@@ -26,19 +27,6 @@ type Workflow = {
   }>;
 };
 
-
-const workflows: Workflow[] = [
-
-  // {
-  //   id: "1",
-  //   name: "Customer Onboarding",
-  //   description: "Automate customer welcome and setup process",
-  //   status: "active",
-  //   steps: 5,
-  // },
-
-];
-
 const ITEMS_PER_PAGE = 5;
 
 const WorkflowList = () => {
@@ -47,32 +35,28 @@ const WorkflowList = () => {
   const [loading, setLoading] = useState(true);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      const userData = await checkSession();
-      if (userData) {
-        setUser(userData);
-      }
-    };
-
-    fetchUserDetails();
-  }, []);
-
   useEffect(() => {
     const fetchWorkflows = async () => {
       try {
-        if(!user) {
-          setError("User not authenticated. Please log in.");
-          return;
+        setLoading(true);
+        
+        // If user is not authenticated yet, try to get session
+        let currentUser = user;
+        if (!currentUser) {
+          const userData = await checkSession();
+          if (!userData) {
+            return; // Exit and wait for auth context to be ready
+          }
+          currentUser = userData;
         }
-        const uGuid = user.uGuid;
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/get-workflows/${uGuid}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch workflows");
-        }
-        const data = await response.json();
+        
+        const uGuid = currentUser.uGuid;
+        
+        // Use axios instead of fetch for better error handling
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/get-workflows/${uGuid}`);
+        const data = response.data;
         
         const processedData = data.map((workflow) => {
           // Extract steps and ensure proper structure
@@ -86,37 +70,70 @@ const WorkflowList = () => {
             }));
           }
         
-          // If steps is empty, add some default steps
-          if (steps.length === 0) {
-            steps = [
-              // { id: "default_step1", name: "Default Step 1", type: "text", value: "" },
-              // { id: "default_step2", name: "Default Step 2", type: "textarea", value: "" },
-            ];
-          }
-        
           return {
             ...workflow,
             steps,
           };
         });
         
-        
         setWorkflows(processedData);
       } catch (err) {
+        console.error("Failed to load workflows:", err);
         setError("Failed to load workflows. Please try again later.");
+        toast.error("Could not load workflows");
       } finally {
         setLoading(false);
       }
     };
 
     fetchWorkflows();
-  }, []);
+  }, [user]);
+
+  // Refetch workflows when user changes
+  useEffect(() => {
+    if (user) {
+      const fetchWorkflows = async () => {
+        try {
+          const uGuid = user.uGuid;
+          const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/get-workflows/${uGuid}`);
+          
+          const processedData = response.data.map((workflow) => {
+            // Process steps as before
+            let steps = [];
+            if (workflow.steps && typeof workflow.steps === "object") {
+              steps = Object.entries(workflow.steps).map(([key, value]) => ({
+                id: key.toLowerCase().replace(/\s+/g, "_"),
+                name: key,
+                type: typeof value === "object" && (value as { S?: string }).S === "" ? "text" : "unknown",
+                value: (value as { S?: string })?.S || "",
+              }));
+            }
+          
+            return {
+              ...workflow,
+              steps,
+            };
+          });
+          
+          setWorkflows(processedData);
+        } catch (err) {
+          console.error("Failed to refresh workflows:", err);
+        }
+      };
+
+      fetchWorkflows();
+    }
+  }, [user?.uGuid]);
 
   const totalPages = Math.ceil(workflows.length / ITEMS_PER_PAGE);
   const hasMoreThanOnePage = workflows.length > ITEMS_PER_PAGE;
   
-  const displayedWorkflows = workflows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const displayedWorkflows = workflows.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE, 
+    currentPage * ITEMS_PER_PAGE
+  );
   
+  // Animation configurations
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -156,60 +173,81 @@ const WorkflowList = () => {
         </button>
       </div>
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="space-y-4"
-      >
-        {displayedWorkflows.map((workflow) => (
-          <motion.div
-            key={workflow.id}
-            variants={item}
-            whileHover={{ x: 4 }}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center cursor-pointer transition-all hover:shadow-sm"
-            onClick={() => handleWorkflowClick(workflow)}
+      {loading ? (
+        <div className="p-4 text-center">
+          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-sm text-gray-500">Loading workflows...</p>
+        </div>
+      ) : error ? (
+        <div className="p-4 text-center text-red-500">
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-2 text-sm text-primary hover:underline"
           >
-            <div>
-              <div className="flex items-center">
-                <h3 className="font-medium dark:text-white">{workflow.name}</h3>
-                {workflow.status === "active" && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 dark:bg-green-400 mr-1"></span>
-                    Active
-                  </span>
-                )}
-                {workflow.status === "draft" && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
-                    Draft
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{workflow.description}</p>
-              
-              <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
-                <div className="flex items-center mr-4">
-                  <GitBranchPlus size={12} className="mr-1" />
-                  <span>{Array.isArray(workflow.steps) ? workflow.steps.length : 0} steps</span>
+            Retry
+          </button>
+        </div>
+      ) : workflows.length === 0 ? (
+        <div className="p-4 text-center">
+          <p className="text-gray-500">No workflows available yet.</p>
+        </div>
+      ) : (
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="space-y-4"
+        >
+          {displayedWorkflows.map((workflow) => (
+            <motion.div
+              key={workflow.id}
+              variants={item}
+              whileHover={{ x: 4 }}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center cursor-pointer transition-all hover:shadow-sm"
+              onClick={() => handleWorkflowClick(workflow)}
+            >
+              <div>
+                <div className="flex items-center">
+                  <h3 className="font-medium dark:text-white">{workflow.name}</h3>
+                  {workflow.status === "active" && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500 dark:bg-green-400 mr-1"></span>
+                      Active
+                    </span>
+                  )}
+                  {workflow.status === "draft" && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+                      Draft
+                    </span>
+                  )}
                 </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{workflow.description}</p>
                 
-                {workflow.lastRun && (
-                  <div className="flex items-center">
-                    <Clock size={12} className="mr-1" />
-                    <span>Last run {workflow.lastRun}</span>
+                <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center mr-4">
+                    <GitBranchPlus size={12} className="mr-1" />
+                    <span>{Array.isArray(workflow.steps) ? workflow.steps.length : 0} steps</span>
                   </div>
-                )}
+                  
+                  {workflow.lastRun && (
+                    <div className="flex items-center">
+                      <Clock size={12} className="mr-1" />
+                      <span>Last run {workflow.lastRun}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            
-            <div>
-              <button className="text-primary hover:text-primary/80 p-1 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
+              
+              <div>
+                <button className="text-primary hover:text-primary/80 p-1 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
 
       {hasMoreThanOnePage && (
         <div className="mt-6">

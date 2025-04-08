@@ -134,7 +134,6 @@ const WorkflowDetail = () => {
     }
   
     const inputValues = inputs.map(input => ({ name: input.name, value: input.value }));
-    console.log("Running workflow with inputs:", inputValues);
     
     // Set is running to true to disable the button
     setIsRunning(true);
